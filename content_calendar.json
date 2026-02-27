@@ -1,0 +1,315 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "2026-02-26",
+    "author": "Satoshi Ledger LLC / PuertoRicoLLC.com",
+    "schedule": "Mon/Wed/Fri — 3 posts per week",
+    "rotation": {
+      "monday": "Cluster 1 (Act 60 Compliance) or Cluster 4 (Tax Strategy)",
+      "wednesday": "Cluster 2 (Business Structure) or Cluster 5 (Operations)",
+      "friday": "Cluster 3 (Bitcoin × Business × Tax × Wealth)"
+    }
+  },
+  "clusters": {
+    "1_act60_compliance": {
+      "name": "Act 60 Compliance & Decree Management",
+      "category_tag": "act60-updates",
+      "category_label_en": "Act 60 Updates",
+      "category_label_es": "Actualizaciones Ley 60",
+      "cta_service": "compliance-consultation",
+      "color": "green"
+    },
+    "2_business_structure": {
+      "name": "PR Business Structure & Entity Strategy",
+      "category_tag": "business-structure",
+      "category_label_en": "Business Structure",
+      "category_label_es": "Estructura Empresarial",
+      "cta_service": "llc-formation",
+      "color": "blue"
+    },
+    "3_bitcoin": {
+      "name": "Bitcoin × Business × Taxes × Wealth Building",
+      "category_tag": "bitcoin-tax",
+      "category_label_en": "Bitcoin & Tax",
+      "category_label_es": "Bitcoin e Impuestos",
+      "cta_service": "crypto-accounting",
+      "color": "orange"
+    },
+    "4_tax_strategy": {
+      "name": "Tax Strategy & Optimization",
+      "category_tag": "tax-strategy",
+      "category_label_en": "Tax Strategy",
+      "category_label_es": "Estrategia Fiscal",
+      "cta_service": "consultation",
+      "color": "blue"
+    },
+    "5_operations": {
+      "name": "Bookkeeping, Compliance Calendar & Operational Guides",
+      "category_tag": "compliance",
+      "category_label_en": "Compliance",
+      "category_label_es": "Cumplimiento",
+      "cta_service": "bookkeeping",
+      "color": "slate"
+    }
+  },
+  "official_sources": {
+    "pr_government": [
+      {"name": "Ley 60-2019 Full Text", "url": "local_pdf", "description": "The Incentives Code statute"},
+      {"name": "Hacienda PR", "url": "https://hacienda.pr.gov", "description": "PR Treasury — SURI, tax forms, circulars, administrative determinations"},
+      {"name": "DDEC PR", "url": "https://ddec.pr.gov", "description": "Dept of Economic Development — decree applications, incentive guidelines"},
+      {"name": "Dept of State PR", "url": "https://estado.pr.gov", "description": "LLC filings, annual reports, corporate fees"},
+      {"name": "OSLPR", "url": "https://oslpr.org", "description": "Oficina de Servicios Legislativos — bill tracking, legislative status"},
+      {"name": "PR Code of Internal Revenue", "url": "https://hacienda.pr.gov", "description": "Código de Rentas Internas de PR"}
+    ],
+    "federal": [
+      {"name": "IRS", "url": "https://irs.gov", "description": "IRC Section 933, Pub 570, Form 8898, Rev Rulings"},
+      {"name": "IRS Newsroom", "url": "https://irs.gov/newsroom", "description": "New guidance, notices, revenue rulings"},
+      {"name": "Congress.gov", "url": "https://congress.gov", "description": "Pending legislation — PR tax bills, digital asset regulation"},
+      {"name": "Treasury / FinCEN", "url": "https://fincen.gov", "description": "FBAR, BSA reporting, beneficial ownership"},
+      {"name": "SEC", "url": "https://sec.gov", "description": "Bitcoin ETF, digital asset classification"},
+      {"name": "Federal Register", "url": "https://federalregister.gov", "description": "New rules mentioning virtual currency, territories"}
+    ],
+    "bitcoin_specific": [
+      {"name": "IRS Notice 2014-21", "description": "Original IRS guidance on virtual currency as property"},
+      {"name": "IRS Revenue Ruling 2023-14", "description": "Updated staking/reward guidance"},
+      {"name": "FASB ASU 2023-08", "description": "Fair value accounting for crypto assets"},
+      {"name": "IRS Rev. Proc. 2024-28", "description": "Cost basis reporting for digital assets"}
+    ]
+  },
+  "posts": [
+    {
+      "week": 1, "day": "monday", "cluster": "1_act60_compliance",
+      "slug": "blog-183-day-residency-myth",
+      "title_en": "The 183-Day Residency Myth: What the IRS Actually Tests for Act 60 Holders",
+      "title_es": "El Mito de los 183 Días: Lo Que el IRS Realmente Evalúa para Titulares de la Ley 60",
+      "keywords": "Act 60 residency test, 183 days Puerto Rico, IRS bona fide residency, closer connection test PR",
+      "sources_required": ["IRS Publication 570", "IRC Section 937", "Act 60-2019 residency provisions"],
+      "cta": "forensic-audit"
+    },
+    {
+      "week": 1, "day": "wednesday", "cluster": "2_business_structure",
+      "slug": "blog-single-vs-multi-member-llc-pr",
+      "title_en": "Single-Member vs. Multi-Member LLC in Puerto Rico: Tax Treatment Differences",
+      "title_es": "LLC de Un Solo Miembro vs. Múltiples Miembros en Puerto Rico: Diferencias en Tratamiento Fiscal",
+      "keywords": "single member LLC Puerto Rico, multi member LLC PR, LLC tax treatment Puerto Rico, PR business structure",
+      "sources_required": ["PR Dept of State filing rules", "PR Code of Internal Revenue", "IRS entity classification"],
+      "cta": "llc-formation"
+    },
+    {
+      "week": 1, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-bitcoin-capital-gains-act60-chapter2",
+      "title_en": "Bitcoin Capital Gains at 0%: The Chapter 2 Investor Playbook for Long-Term Holders",
+      "title_es": "Ganancias de Capital en Bitcoin al 0%: La Estrategia del Capítulo 2 para Holders a Largo Plazo",
+      "keywords": "bitcoin capital gains Puerto Rico, Act 60 Chapter 2 bitcoin, 0% bitcoin tax PR, bitcoin investor Puerto Rico",
+      "sources_required": ["Act 60 Section 2021.01", "IRS Notice 2014-21", "IRC Section 933", "HB 505 pending reform"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 2, "day": "monday", "cluster": "4_tax_strategy",
+      "slug": "blog-dual-decree-strategy-chapter2-chapter3",
+      "title_en": "The Dual Decree Strategy: Combining Chapter 2 and Chapter 3 for ~4% Effective Rate",
+      "title_es": "La Estrategia de Decreto Doble: Combinando Capítulo 2 y Capítulo 3 para una Tasa Efectiva de ~4%",
+      "keywords": "dual decree Puerto Rico, Chapter 2 Chapter 3 combined, Act 60 effective tax rate, PR tax optimization",
+      "sources_required": ["Act 60 Section 2021.01", "Act 60 Section 2031.01", "Hacienda administrative determinations"],
+      "cta": "consultation"
+    },
+    {
+      "week": 2, "day": "wednesday", "cluster": "5_operations",
+      "slug": "blog-2026-pr-tax-calendar",
+      "title_en": "The Complete 2026 Puerto Rico Tax Calendar: Every Deadline for Act 60 Holders",
+      "title_es": "Calendario Fiscal Completo de Puerto Rico 2026: Cada Fecha Límite para Titulares de la Ley 60",
+      "keywords": "Puerto Rico tax deadlines 2026, Act 60 filing dates, SURI monthly filing, Hacienda due dates",
+      "sources_required": ["Hacienda filing calendar", "DDEC annual report deadline", "IRS Form 8898 deadline"],
+      "cta": "bookkeeping"
+    },
+    {
+      "week": 2, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-5percent-toll-tax-bitcoin",
+      "title_en": "The 5% Toll Tax on Pre-Move Bitcoin: Calculating Your Cost Basis Before Relocating to PR",
+      "title_es": "El Impuesto de Peaje del 5% sobre Bitcoin Pre-Mudanza: Calculando su Base de Costo Antes de Reubicarse a PR",
+      "keywords": "toll tax bitcoin Puerto Rico, pre-move capital gains PR, Act 60 toll tax calculation, bitcoin cost basis relocation",
+      "sources_required": ["Act 60 Section 2021.01(d)", "IRS Notice 2014-21", "PR toll tax graduated schedule"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 3, "day": "monday", "cluster": "1_act60_compliance",
+      "slug": "blog-ddec-annual-report-guide",
+      "title_en": "DDEC Annual Report Filing: The Step-by-Step Compliance Checklist for Decree Holders",
+      "title_es": "Informe Anual del DDEC: Lista de Verificación Paso a Paso para Titulares de Decretos",
+      "keywords": "DDEC annual report, Act 60 annual compliance, decree holder reporting, DDEC filing requirements",
+      "sources_required": ["DDEC annual report form", "Act 60 compliance provisions", "2026 enforcement updates"],
+      "cta": "compliance-consultation"
+    },
+    {
+      "week": 3, "day": "wednesday", "cluster": "2_business_structure",
+      "slug": "blog-pr-department-state-articles-organization",
+      "title_en": "PR Department of State Filing: Articles of Organization Walkthrough for LLCs",
+      "title_es": "Presentación ante el Departamento de Estado de PR: Guía de Artículos de Organización para LLCs",
+      "keywords": "Puerto Rico LLC filing, articles of organization PR, Department of State LLC, PR LLC formation steps",
+      "sources_required": ["PR Dept of State fee schedule", "LLC Act of Puerto Rico", "SURI registration requirements"],
+      "cta": "llc-formation"
+    },
+    {
+      "week": 3, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-fbar-bitcoin-exchange-accounts",
+      "title_en": "FBAR and FinCEN Reporting: Do Your Bitcoin Exchange Accounts Need to Be Disclosed?",
+      "title_es": "FBAR y Reportes FinCEN: ¿Necesitan Divulgarse sus Cuentas de Exchange de Bitcoin?",
+      "keywords": "FBAR bitcoin, FinCEN crypto reporting, foreign bitcoin exchange FBAR, cryptocurrency FBAR requirements",
+      "sources_required": ["FinCEN BSA rules", "31 USC 5314", "FinCEN guidance on virtual currency", "IRS FBAR instructions"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 4, "day": "monday", "cluster": "4_tax_strategy",
+      "slug": "blog-us-sourced-vs-pr-sourced-income",
+      "title_en": "US-Sourced vs. PR-Sourced Income: The Line That Determines Your Tax Rate",
+      "title_es": "Ingreso de Fuente EEUU vs. PR: La Línea Que Determina Su Tasa de Impuestos",
+      "keywords": "US sourced income Puerto Rico, PR sourced income Act 60, source of income rules, IRC Section 933 sourcing",
+      "sources_required": ["IRC Section 933", "IRC Section 861-865 source rules", "IRS Publication 570"],
+      "cta": "consultation"
+    },
+    {
+      "week": 4, "day": "wednesday", "cluster": "5_operations",
+      "slug": "blog-suri-monthly-filing-zero-revenue",
+      "title_en": "SURI Monthly Filing: What Zero-Revenue Months Still Require from Your LLC",
+      "title_es": "Presentación Mensual SURI: Lo Que los Meses Sin Ingresos Aún Requieren de Su LLC",
+      "keywords": "SURI monthly filing, Puerto Rico IVU filing, zero revenue SURI, Hacienda merchant registration",
+      "sources_required": ["Hacienda SURI portal instructions", "IVU regulations", "Act 60 export service IVU exemption"],
+      "cta": "bookkeeping"
+    },
+    {
+      "week": 4, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-bitcoin-business-income-vs-capital-gain",
+      "title_en": "Bitcoin as Business Income vs. Capital Gain: Why the Classification Changes Your Entire Tax Picture",
+      "title_es": "Bitcoin como Ingreso de Negocio vs. Ganancia de Capital: Por Qué la Clasificación Cambia Todo Su Panorama Fiscal",
+      "keywords": "bitcoin business income, bitcoin capital gain classification, IRS bitcoin tax treatment, bitcoin ordinary income vs capital",
+      "sources_required": ["IRS Notice 2014-21", "IRS Rev Ruling 2023-14", "Act 60 Chapter 2 vs Chapter 3 treatment"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 5, "day": "monday", "cluster": "1_act60_compliance",
+      "slug": "blog-act60-audit-red-flags",
+      "title_en": "Act 60 Audit Red Flags: What Triggers OITE and IRS Review of Your Decree",
+      "title_es": "Señales de Alerta en Auditorías de la Ley 60: Qué Activa la Revisión de OITE y el IRS",
+      "keywords": "Act 60 audit, OITE Puerto Rico, IRS Act 60 enforcement, decree holder audit risk",
+      "sources_required": ["IRS campaign audit announcements", "OITE enforcement guidelines", "Act 60 compliance provisions"],
+      "cta": "forensic-audit"
+    },
+    {
+      "week": 5, "day": "wednesday", "cluster": "2_business_structure",
+      "slug": "blog-corporate-treatment-election-pr-llc",
+      "title_en": "When to Elect Corporate Treatment for Your PR Single-Member LLC",
+      "title_es": "Cuándo Elegir Tratamiento Corporativo para Su LLC de Un Solo Miembro en PR",
+      "keywords": "LLC corporate treatment Puerto Rico, PR LLC taxed as corporation, entity election Puerto Rico, Act 52-2022",
+      "sources_required": ["Act 52-2022", "PR Code of Internal Revenue entity rules", "Hacienda entity classification"],
+      "cta": "llc-formation"
+    },
+    {
+      "week": 5, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-corporate-bitcoin-treasury-act60",
+      "title_en": "Corporate Bitcoin Treasury in Puerto Rico: How Your LLC's BTC Holdings Are Taxed Under Act 60",
+      "title_es": "Tesorería Corporativa en Bitcoin en Puerto Rico: Cómo se Gravan las Tenencias de BTC de Su LLC Bajo la Ley 60",
+      "keywords": "corporate bitcoin treasury Puerto Rico, LLC bitcoin holdings tax, Act 60 corporate bitcoin, PR business BTC treasury",
+      "sources_required": ["FASB ASU 2023-08 fair value", "Act 60 Chapter 3 corporate income", "IRS Notice 2014-21"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 6, "day": "monday", "cluster": "4_tax_strategy",
+      "slug": "blog-puerto-rico-vs-wyoming-llc",
+      "title_en": "Puerto Rico vs. Wyoming LLC: Tax Treatment Comparison for Remote Business Owners",
+      "title_es": "LLC de Puerto Rico vs. Wyoming: Comparación de Tratamiento Fiscal para Dueños de Negocios Remotos",
+      "keywords": "Puerto Rico LLC vs Wyoming LLC, best state for LLC, remote business LLC comparison, PR vs Wyoming tax",
+      "sources_required": ["Wyoming LLC Act", "PR LLC Act", "IRC Section 933", "State tax comparison data"],
+      "cta": "consultation"
+    },
+    {
+      "week": 6, "day": "wednesday", "cluster": "5_operations",
+      "slug": "blog-quickbooks-setup-pr-llc",
+      "title_en": "QuickBooks Setup for a Puerto Rico LLC: Chart of Accounts That Match Hacienda Categories",
+      "title_es": "Configuración de QuickBooks para una LLC de Puerto Rico: Plan de Cuentas Según Categorías de Hacienda",
+      "keywords": "QuickBooks Puerto Rico, PR LLC chart of accounts, Hacienda tax categories, Puerto Rico bookkeeping setup",
+      "sources_required": ["Hacienda income/expense categories", "PR tax form line items", "SURI reporting categories"],
+      "cta": "bookkeeping"
+    },
+    {
+      "week": 6, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-bitcoin-self-custody-tax-documentation",
+      "title_en": "Self-Custody Bitcoin and Tax Documentation: What Records Hacienda Requires",
+      "title_es": "Bitcoin en Auto-Custodia y Documentación Fiscal: Qué Registros Requiere Hacienda",
+      "keywords": "self custody bitcoin taxes, bitcoin tax records Puerto Rico, Hacienda crypto documentation, bitcoin wallet tax proof",
+      "sources_required": ["IRS Notice 2014-21 record keeping", "Hacienda audit documentation standards", "Act 60 crypto compliance"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 7, "day": "monday", "cluster": "1_act60_compliance",
+      "slug": "blog-hb505-reform-impact",
+      "title_en": "House Bill 505: What the 4% Reform Means for New vs. Existing Decree Holders",
+      "title_es": "Proyecto de Ley 505: Qué Significa la Reforma del 4% para Nuevos vs. Existentes Titulares de Decretos",
+      "keywords": "HB 505 Puerto Rico, Act 60 reform 2026, new decree 4% rate, existing decree grandfathered",
+      "sources_required": ["HB 505 text", "PR Senate approval Jun 2025", "Act 60 Section 2021.01 current vs proposed"],
+      "cta": "consultation"
+    },
+    {
+      "week": 7, "day": "wednesday", "cluster": "2_business_structure",
+      "slug": "blog-reasonable-salary-export-services-benchmarks",
+      "title_en": "Reasonable Salary Benchmarks for Export Services Decree Holders: Industry Data for 2026",
+      "title_es": "Puntos de Referencia de Salario Razonable para Titulares de Decretos de Servicios de Exportación: Datos de Industria 2026",
+      "keywords": "reasonable salary Act 60, export services salary PR, OITE salary audit, Act 60 salary benchmarks",
+      "sources_required": ["BLS salary data", "OITE enforcement guidance", "PR employment data", "Act 60 salary provisions"],
+      "cta": "llc-formation"
+    },
+    {
+      "week": 7, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-bitcoin-mining-pr-export-service",
+      "title_en": "Bitcoin Mining in Puerto Rico: Does Your Mining Operation Qualify for the 4% Export Rate?",
+      "title_es": "Minería de Bitcoin en Puerto Rico: ¿Califica Su Operación Minera para la Tasa de Exportación del 4%?",
+      "keywords": "bitcoin mining Puerto Rico, PR mining tax, Act 60 bitcoin mining, mining as export service",
+      "sources_required": ["Act 60 Chapter 3 eligible activities", "IRS Rev Ruling 2023-14 mining", "PR energy regulations"],
+      "cta": "crypto-accounting"
+    },
+    {
+      "week": 8, "day": "monday", "cluster": "4_tax_strategy",
+      "slug": "blog-estimated-tax-payments-puerto-rico",
+      "title_en": "Estimated Tax Payments in Puerto Rico: Quarterly Deadlines and Penalties for 2026",
+      "title_es": "Pagos Estimados de Impuestos en Puerto Rico: Fechas Trimestrales y Penalidades para 2026",
+      "keywords": "Puerto Rico estimated tax, PR quarterly tax payments, Hacienda estimated tax, PR tax penalties",
+      "sources_required": ["Hacienda estimated payment schedule", "PR Code of Internal Revenue penalty provisions", "Form 480.E"],
+      "cta": "bookkeeping"
+    },
+    {
+      "week": 8, "day": "wednesday", "cluster": "5_operations",
+      "slug": "blog-year-end-closing-checklist-pr-business",
+      "title_en": "Year-End Closing Checklist for PR Businesses: What Your Accountant Needs by January",
+      "title_es": "Lista de Cierre de Fin de Año para Negocios en PR: Lo Que Su Contador Necesita para Enero",
+      "keywords": "year end tax checklist Puerto Rico, PR business closing, accountant documents PR, tax season preparation PR",
+      "sources_required": ["Hacienda filing deadlines", "PR Form 480.6 instructions", "DDEC annual report requirements"],
+      "cta": "bookkeeping"
+    },
+    {
+      "week": 8, "day": "friday", "cluster": "3_bitcoin",
+      "slug": "blog-bitcoin-etf-gains-act60-residents",
+      "title_en": "Bitcoin ETF Gains and Act 60: Tax Treatment for PR Residents Holding Spot BTC ETFs",
+      "title_es": "Ganancias de ETF de Bitcoin y la Ley 60: Tratamiento Fiscal para Residentes de PR con ETFs de BTC Spot",
+      "keywords": "bitcoin ETF tax Puerto Rico, spot BTC ETF Act 60, bitcoin ETF capital gains PR, IBIT FBTC tax PR",
+      "sources_required": ["SEC Bitcoin ETF approvals", "IRS ETF taxation rules", "IRC Section 933 applicability to ETFs", "Act 60 qualifying assets"],
+      "cta": "crypto-accounting"
+    }
+  ],
+  "reactive_content_triggers": {
+    "description": "The news monitor watches these sources daily and alerts when new publications are detected",
+    "watch_keywords": [
+      "Act 60", "Ley 60", "Puerto Rico tax incentive", "DDEC decree",
+      "bitcoin tax", "digital asset tax", "virtual currency IRS",
+      "Puerto Rico residency", "Section 933", "territory tax",
+      "bitcoin ETF", "FBAR cryptocurrency", "FinCEN virtual currency",
+      "Puerto Rico LLC", "Hacienda circular", "OITE enforcement"
+    ],
+    "watch_sources": [
+      "irs.gov/newsroom",
+      "hacienda.pr.gov",
+      "ddec.pr.gov",
+      "congress.gov",
+      "fincen.gov",
+      "federalregister.gov"
+    ]
+  }
+}
