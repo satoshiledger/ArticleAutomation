@@ -641,6 +641,57 @@ def send_email(subject: str, body_text: str, body_html: str = ""):
     print("  ✗ All email methods failed")
 
 
+def push_to_github(filename: str, content: str, commit_message: str = "") -> bool:
+    """Push a file to the GitHub repo (livewebsites) via the GitHub API.
+    This deploys the blog post to the live site via Hostinger's Git integration."""
+    import httpx
+
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        print("  ✗ GitHub push skipped: GITHUB_TOKEN or GITHUB_REPO not set")
+        return False
+
+    if not commit_message:
+        commit_message = f"Publish blog post: {filename}"
+
+    api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{filename}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    import base64
+    encoded_content = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+
+    # Check if file already exists (need SHA to update)
+    sha = None
+    try:
+        resp = httpx.get(api_url, headers=headers, timeout=30)
+        if resp.status_code == 200:
+            sha = resp.json().get("sha")
+    except Exception:
+        pass
+
+    body = {
+        "message": commit_message,
+        "content": encoded_content,
+        "branch": "main",
+    }
+    if sha:
+        body["sha"] = sha
+
+    try:
+        resp = httpx.put(api_url, headers=headers, json=body, timeout=30)
+        if resp.status_code in (200, 201):
+            print(f"  ✓ Pushed to GitHub: {filename}")
+            return True
+        else:
+            print(f"  ✗ GitHub push failed ({resp.status_code}): {resp.text[:200]}")
+            return False
+    except Exception as e:
+        print(f"  ✗ GitHub push error: {e}")
+        return False
+
+
 def load_calendar() -> dict:
     """Load the content calendar JSON."""
     with open(CALENDAR_PATH) as f:
@@ -780,7 +831,7 @@ Output ONLY the corrected complete HTML file.
 """
 
     print("  [Pass 3] Fixing critical issues...")
-    fixed = call_claude(PASS3_FIX_PROMPT, user_message, use_web_search=True)
+    fixed = call_claude(PASS3_FIX_PROMPT, user_message, use_web_search=False)
 
     fixed = re.sub(r"^```html?\s*", "", fixed, flags=re.MULTILINE)
     fixed = re.sub(r"```\s*$", "", fixed, flags=re.MULTILINE)
@@ -1056,8 +1107,8 @@ def run_scheduled_pipeline():
     print(f"  ✓ Draft saved: {draft_path}")
 
     # Wait 65s to reset rate limit window (30k tokens/min)
-    print("  ⏳ Waiting 65s for rate limit reset...")
-    time.sleep(65)
+    print("  ⏳ Waiting 90s for rate limit reset...")
+    time.sleep(90)
 
     # Pass 2: Audit
     audit = pass2_audit(html, post)
@@ -1071,15 +1122,15 @@ def run_scheduled_pipeline():
     # Pass 3: Fix critical issues (if any)
     if audit.get("critical_issues"):
         print(f"  ⚠ {len(audit['critical_issues'])} critical issues found — auto-fixing...")
-        print("  ⏳ Waiting 65s for rate limit reset...")
-        time.sleep(65)
+        print("  ⏳ Waiting 90s for rate limit reset...")
+        time.sleep(90)
 
         html = pass3_fix(html, audit, post)
         draft_path.write_text(html, encoding="utf-8")
 
         # Re-audit the fixed version
-        print("  ⏳ Waiting 65s for rate limit reset...")
-        time.sleep(65)
+        print("  ⏳ Waiting 90s for rate limit reset...")
+        time.sleep(90)
 
         audit2 = pass2_audit(html, post)
         audit_path.write_text(json.dumps(audit2, indent=2), encoding="utf-8")
@@ -1088,8 +1139,8 @@ def run_scheduled_pipeline():
         audit = audit2
 
     # Pass 4: Social media derivatives
-    print("  ⏳ Waiting 65s for rate limit reset...")
-    time.sleep(65)
+    print("  ⏳ Waiting 90s for rate limit reset...")
+    time.sleep(90)
 
     social = pass4_social(html, post)
     social_path = DRAFTS_DIR / f"{post['slug']}_social.json"
