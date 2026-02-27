@@ -287,7 +287,7 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
     headers = {
         "x-api-key": ANTHROPIC_API_KEY,
         "content-type": "application/json",
-        "anthropic-version": "2025-01-01",
+        "anthropic-version": "2023-06-01",
     }
 
     body = {
@@ -297,8 +297,12 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
         "messages": [{"role": "user", "content": user_message}],
     }
 
-    if use_web_search:
-        body["tools"] = [{"type": "web_search_20250305", "name": "web_search"}]
+    # Web search disabled for initial deployment — Claude uses training knowledge
+    # To re-enable later, uncomment the lines below and update anthropic-version
+    # if use_web_search:
+    #     body["tools"] = [{"type": "web_search_20250305", "name": "web_search"}]
+
+    print(f"  Calling Claude API (model: {body['model']})...")
 
     resp = httpx.post(
         "https://api.anthropic.com/v1/messages",
@@ -306,8 +310,9 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
         json=body,
         timeout=300,
     )
+
     if resp.status_code != 200:
-        print(f"  API Error {resp.status_code}: {resp.text}")
+        print(f"  API Error {resp.status_code}: {resp.text[:500]}")
     resp.raise_for_status()
     data = resp.json()
 
@@ -316,6 +321,8 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
     for block in data.get("content", []):
         if block.get("type") == "text":
             text_parts.append(block["text"])
+
+    print(f"  API response received ({len(text_parts)} text blocks)")
     return "\n".join(text_parts)
 
 
