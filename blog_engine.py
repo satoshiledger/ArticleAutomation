@@ -68,7 +68,7 @@ You write at the A++ gold standard of accounting content. Every claim must be:
 - Authoritative but approachable — like a senior CPA who explains things clearly
 - Never condescending. Your readers are smart business owners and investors.
 - Use real examples with dollar amounts to illustrate tax concepts
-- Bilingual: produce both English and Spanish versions in the same HTML file
+- Bilingual: The ENGLISH version is the primary article. Include a Spanish note directing readers to contact for Spanish help.
 
 ## BITCOIN POLICY (CRITICAL)
 - Bitcoin ONLY. Never mention altcoins, Ethereum, DeFi tokens, NFTs, or any other cryptocurrency.
@@ -88,17 +88,6 @@ You write at the A++ gold standard of accounting content. Every claim must be:
    to your situation."
 7. Every post MUST have a clear CTA linking to the appropriate PuertoRicoLLC.com service
 
-## HTML TEMPLATE REQUIREMENTS
-- Use the exact same HTML structure, Tailwind classes, nav, footer, WhatsApp button, 
-  and language toggle as existing PuertoRicoLLC.com blog posts
-- Include: Open Graph meta tags, Twitter Card meta, Schema.org Article markup, 
-  Google Analytics (G-L7DET25V5W)
-- All content MUST be bilingual with data-lang="en" and data-lang="es" attributes
-- Hero image: use a relevant Unsplash URL with ?w=1200&h=600&fit=crop&q=80
-- Category badge, publish date, estimated read time
-- Social share buttons (Facebook, Twitter, LinkedIn, WhatsApp)
-- Internal links to other PuertoRicoLLC.com pages where relevant
-
 ## AVAILABLE INTERNAL LINKS
 - index.html (homepage + contact form)
 - act60-mastery.html (Act 60 comprehensive page)
@@ -112,7 +101,264 @@ You write at the A++ gold standard of accounting content. Every claim must be:
 - blog-optional-tax-method.html (optional tax method article)
 - blog-young-entrepreneur.html (young entrepreneur article)
 
-You MUST output ONLY the complete HTML file. No explanation, no markdown, no preamble.
+## CRITICAL: USE THIS EXACT HTML TEMPLATE
+You MUST use the exact template structure below. Replace the placeholders with actual content.
+Do NOT invent your own nav, footer, styles, or layout. Copy this template exactly.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} | PuertoRicoLLC.com</title>
+    <meta name="description" content="{{META_DESCRIPTION}}">
+    <meta name="keywords" content="{{KEYWORDS}}">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{TITLE}}">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
+    <meta property="og:image" content="{{HERO_IMAGE_URL}}">
+    <meta property="og:url" content="https://puertoricollc.com/{{SLUG}}.html">
+    <meta property="og:type" content="article">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{TITLE}}">
+    <meta name="twitter:description" content="{{META_DESCRIPTION}}">
+    <meta name="twitter:image" content="{{HERO_IMAGE_URL}}">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .hero-bg { background: linear-gradient(135deg, #020617 0%, #1e3a8a 100%); }
+        [data-lang="es"] { display: none; }
+        .lang-active { font-weight: 800; color: #3A99D8 !important; border-bottom: 2px solid #3A99D8; }
+        html { scroll-behavior: smooth; }
+    </style>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-L7DET25V5W"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-L7DET25V5W');
+    </script>
+    
+    <!-- Schema.org Article Markup -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": "{{TITLE}}",
+        "image": "{{HERO_IMAGE_URL}}",
+        "author": {"@type": "Organization", "name": "PuertoRicoLLC.com"},
+        "publisher": {"@type": "Organization", "name": "Satoshi Ledger LLC"},
+        "datePublished": "{{PUBLISH_DATE_ISO}}",
+        "dateModified": "{{PUBLISH_DATE_ISO}}",
+        "description": "{{META_DESCRIPTION}}"
+    }
+    </script>
+</head>
+<body class="bg-slate-50">
+    <!-- Navigation (EXACT copy from live site) -->
+    <nav class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="text-2xl font-black uppercase tracking-tighter" style="color:#CC0000">
+                    <span style="color:#CC0000">PuertoRico</span><span style="color:#3A99D8">LLC</span><span style="color:#3A99D8;font-weight:500">.com</span>
+                </a>
+                <div class="hidden md:flex items-center gap-6">
+                    <div class="flex items-center gap-1 text-base font-black uppercase tracking-tighter">
+                        <button onclick="setLanguage('en')" id="btn-en" class="lang-active cursor-pointer">EN</button>
+                        <span class="text-slate-500 text-xs">|</span>
+                        <button onclick="setLanguage('es')" id="btn-es" class="cursor-pointer">ES</button>
+                    </div>
+                    <div class="flex space-x-4 text-sm font-semibold uppercase">
+                        <a href="index.html" class="text-white hover:text-gray-300 transition">Home</a>
+                        <a href="act60-mastery.html" class="text-white hover:text-gray-300 transition">Act 60</a>
+                        <a href="blog.html" class="text-white font-bold underline underline-offset-4 transition">Blog</a>
+                        <a href="index.html#contact" class="bg-red-600 text-white px-5 py-2 rounded-lg hover:bg-red-700 transition shadow-sm">Consultation</a>
+                    </div>
+                </div>
+                <button onclick="toggleMobileMenu()" class="md:hidden text-2xl text-white"><i class="fas fa-bars" id="menu-icon"></i></button>
+            </div>
+            <div id="mobile-menu" class="hidden md:hidden mt-4 space-y-3 pb-4">
+                <a href="index.html" class="block py-2 text-white hover:text-gray-300 transition text-center font-semibold">Home</a>
+                <a href="act60-mastery.html" class="block py-2 text-white hover:text-gray-300 transition text-center font-semibold">Act 60</a>
+                <a href="blog.html" class="block py-2 text-white underline underline-offset-4 transition text-center font-bold">Blog</a>
+                <a href="index.html#contact" class="block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition text-center font-bold">Consultation</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Article Content -->
+    <article class="py-20 px-6 bg-gradient-to-b from-white to-slate-50">
+        <div class="max-w-5xl mx-auto">
+            <!-- Hero Image -->
+            <div class="mb-12">
+                <div class="rounded-3xl overflow-hidden shadow-2xl mb-8">
+                    <img src="{{HERO_IMAGE_URL}}" alt="{{HERO_IMAGE_ALT}}" class="w-full h-96 object-cover">
+                </div>
+                <div class="flex items-center gap-4 text-sm text-slate-600 mb-4 flex-wrap">
+                    <span class="bg-blue-100 text-blue-800 px-4 py-1 rounded-full font-bold">
+                        <span data-lang="en">{{CATEGORY_EN}}</span>
+                        <span data-lang="es">{{CATEGORY_ES}}</span>
+                    </span>
+                    <span data-lang="en">Published {{PUBLISH_DATE}}</span>
+                    <span data-lang="es">Publicado {{PUBLISH_DATE}}</span>
+                    <span>&bull;</span>
+                    <span data-lang="en">{{READ_TIME}} min read</span>
+                    <span data-lang="es">{{READ_TIME}} min lectura</span>
+                </div>
+                
+                <!-- Spanish note -->
+                <div data-lang="es" class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
+                    <p class="text-blue-900 text-sm">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Nota:</strong> Este articulo tecnico esta disponible solo en ingles. Para consultas en espanol, <a href="index.html#contact" class="text-blue-600 font-bold underline">contactenos directamente</a>.
+                    </p>
+                </div>
+                
+                <h1 class="text-4xl md:text-5xl font-black text-slate-900 mb-6 leading-tight">
+                    <span data-lang="en">{{TITLE_EN}}</span>
+                    <span data-lang="es">{{TITLE_ES}}</span>
+                </h1>
+            </div>
+
+            <!-- Social Share -->
+            <div class="mb-12 pb-8 border-b border-slate-200">
+                <p class="text-slate-600 mb-4 font-semibold text-center">
+                    <span data-lang="en">Share this article:</span>
+                    <span data-lang="es">Compartir este articulo:</span>
+                </p>
+                <div class="flex justify-center gap-4">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/intent/tweet?url=https://puertoricollc.com/{{SLUG}}.html&text={{TITLE_ENCODED}}" target="_blank" class="w-12 h-12 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600 transition"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://wa.me/?text={{TITLE_ENCODED}}%20https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+
+            <!-- MAIN ARTICLE CONTENT GOES HERE -->
+            <!-- Use <div class="bg-white p-8 md:p-12 rounded-2xl shadow-lg mb-12"> for each section -->
+            <!-- Use font-black for headings, text-slate-900 for text -->
+            <!-- Use bg-gradient-to-br from-blue-50 to-blue-100 cards for key points -->
+            <!-- Use bg-white p-8 rounded-2xl shadow-lg for content sections -->
+            
+            {{ARTICLE_BODY}}
+
+            <!-- Sources & References -->
+            <div class="bg-white p-8 md:p-12 rounded-2xl shadow-lg mb-12">
+                <h2 class="text-3xl font-black text-slate-900 mb-6">Sources & References</h2>
+                {{SOURCES_LIST}}
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="bg-slate-100 p-6 rounded-xl text-sm text-slate-500 italic mb-12">
+                <strong>Disclaimer:</strong> This content is for informational purposes only and does not constitute legal or tax advice. Tax laws are complex and subject to change. Consult a qualified Puerto Rico CPA and tax attorney before making any decisions. PuertoRicoLLC.com (Satoshi Ledger LLC) does not guarantee any specific tax outcome.
+            </div>
+
+            <!-- CTA -->
+            <div class="bg-gradient-to-r from-blue-600 to-blue-500 text-white p-10 md:p-16 rounded-3xl text-center shadow-2xl mb-12">
+                <h2 class="text-3xl md:text-5xl font-black mb-6">{{CTA_TITLE}}</h2>
+                <p class="text-xl text-blue-100 mb-8 max-w-3xl mx-auto leading-relaxed">{{CTA_DESCRIPTION}}</p>
+                <a href="index.html#contact" class="inline-block bg-white text-blue-600 px-10 py-5 rounded-2xl font-black text-xl hover:bg-blue-50 transition shadow-2xl transform hover:scale-105">
+                    Schedule Your Consultation <i class="fas fa-arrow-right ml-3"></i>
+                </a>
+            </div>
+
+            <!-- Social Share Bottom + Back to Blog -->
+            <div class="pt-8 border-t border-slate-200 text-center">
+                <p class="text-slate-600 mb-4 font-semibold">Share this article:</p>
+                <div class="flex justify-center gap-4 mb-8">
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://twitter.com/intent/tweet?url=https://puertoricollc.com/{{SLUG}}.html&text={{TITLE_ENCODED}}" target="_blank" class="w-12 h-12 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600 transition"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-blue-700 text-white rounded-full flex items-center justify-center hover:bg-blue-800 transition"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="https://wa.me/?text={{TITLE_ENCODED}}%20https://puertoricollc.com/{{SLUG}}.html" target="_blank" class="w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700 transition"><i class="fab fa-whatsapp"></i></a>
+                </div>
+                <a href="blog.html" class="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-700 transition">
+                    <i class="fas fa-arrow-left"></i>
+                    <span data-lang="en">Back to Blog</span>
+                    <span data-lang="es">Volver al Blog</span>
+                </a>
+            </div>
+        </div>
+    </article>
+
+    <!-- Footer (EXACT copy from live site) -->
+    <footer class="py-12 bg-slate-950 text-white text-center">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="mb-6">
+                <a href="index.html" class="text-2xl font-black text-white uppercase tracking-tighter mb-2 inline-block">
+                    <span style="color:#CC0000">PuertoRico</span><span style="color:#3A99D8">LLC</span><span style="color:#3A99D8;font-weight:500">.com</span>
+                </a>
+            </div>
+            <p class="text-xs opacity-30 italic mb-6">Tax compliance and accounting services. Not a law firm. Not financial advice.</p>
+            <div class="flex justify-center gap-6 mb-6">
+                <a href="https://instagram.com/SatoshiLedger" target="_blank" class="text-slate-400 hover:text-blue-400 transition"><i class="fab fa-instagram text-2xl"></i></a>
+            </div>
+            <p class="text-xs opacity-20">&copy; 2026 Satoshi Ledger LLC d/b/a PuertoRicoLLC.com. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Floating Button -->
+    <style>
+        .whatsapp-float { position:fixed; width:60px; height:60px; bottom:40px; right:40px; background-color:#25d366; color:#FFF; border-radius:50px; text-align:center; font-size:30px; box-shadow:2px 2px 10px rgba(0,0,0,0.3); z-index:100; transition:all 0.3s ease; display:flex; align-items:center; justify-content:center; }
+        .whatsapp-float:hover { background-color:#128c7e; transform:scale(1.1); }
+        .whatsapp-float i { margin-top:4px; }
+        .whatsapp-status { position:absolute; top:5px; right:5px; width:14px; height:14px; background-color:#4CAF50; border:2px solid white; border-radius:50%; animation:pulse 2s infinite; }
+        @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(76,175,80,0.7)} 70%{box-shadow:0 0 0 10px rgba(76,175,80,0)} 100%{box-shadow:0 0 0 0 rgba(76,175,80,0)} }
+        .whatsapp-tooltip { position:absolute; right:70px; top:50%; transform:translateY(-50%); background-color:white; color:#333; padding:8px 15px; border-radius:8px; white-space:nowrap; font-size:14px; font-weight:600; box-shadow:0 2px 10px rgba(0,0,0,0.2); opacity:0; pointer-events:none; transition:opacity 0.3s ease; }
+        .whatsapp-float:hover .whatsapp-tooltip { opacity:1; }
+        @media screen and (max-width:768px) { .whatsapp-float{width:50px;height:50px;bottom:20px;right:20px;font-size:26px;} .whatsapp-tooltip{display:none;} }
+    </style>
+    <a href="https://wa.me/16146952904?text=Hello%2C%20I%27m%20interested%20in%20your%20Puerto%20Rico%20tax%20services" class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp">
+        <span class="whatsapp-status"></span>
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">
+            <span data-lang="en">Chat with us!</span>
+            <span data-lang="es">Chatea con nosotros!</span>
+        </span>
+    </a>
+
+    <!-- JavaScript (EXACT copy from live site) -->
+    <script>
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) { icon.classList.remove('fa-bars'); icon.classList.add('fa-times'); }
+            else { icon.classList.remove('fa-times'); icon.classList.add('fa-bars'); }
+        }
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-lang]').forEach(el => {
+                el.style.display = el.getAttribute('data-lang') === lang ? 'inline' : 'none';
+            });
+            document.getElementById('btn-en').classList.toggle('lang-active', lang === 'en');
+            document.getElementById('btn-es').classList.toggle('lang-active', lang === 'es');
+            localStorage.setItem('preferredLang', lang);
+        }
+        window.addEventListener('load', () => {
+            const savedLang = localStorage.getItem('preferredLang') || 'en';
+            setLanguage(savedLang);
+        });
+    </script>
+</body>
+</html>
+```
+
+Replace ALL {{placeholders}} with actual content. The article body should use these section styles:
+- Wrap each major section in: <div class="bg-white p-8 md:p-12 rounded-2xl shadow-lg mb-12">
+- Headings: <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-6">
+- Subheadings: <h3 class="text-2xl font-bold text-slate-900 mb-4">
+- Body text: <p class="text-lg text-slate-700 leading-relaxed mb-6">
+- Key stat cards: use bg-gradient-to-br from-blue-50 to-blue-100 with icon divs
+- Callout boxes: <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+- Warning boxes: <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-lg">
+
+Write ONLY in English. Do not include a full Spanish translation of the article.
+Output ONLY the complete HTML file. No explanation, no markdown, no preamble.
 Start with <!DOCTYPE html> and end with </html>.
 """
 
@@ -293,7 +539,7 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
 
     kwargs = {
         "model": model,
-        "max_tokens": 16000,
+        "max_tokens": 12000,
         "system": system_prompt,
         "messages": [{"role": "user", "content": user_message}],
     }
