@@ -306,6 +306,8 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
         json=body,
         timeout=300,
     )
+    if resp.status_code != 200:
+        print(f"  API Error {resp.status_code}: {resp.text}")
     resp.raise_for_status()
     data = resp.json()
 
