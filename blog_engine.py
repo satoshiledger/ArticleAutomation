@@ -291,7 +291,7 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
     }
 
     body = {
-        "model": "claude-sonnet-4-5-20250514",
+        "model": "claude-sonnet-4-5-20250929",
         "max_tokens": 16000,
         "system": system_prompt,
         "messages": [{"role": "user", "content": user_message}],
