@@ -375,7 +375,18 @@ def approve(slug):
     src = DRAFTS_DIR / f"{slug}.html"
     dst = APPROVED_DIR / f"{slug}.html"
     if src.exists():
-        dst.write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        content = src.read_text(encoding="utf-8")
+        dst.write_text(content, encoding="utf-8")
+
+        # Push to GitHub → triggers Hostinger deployment → goes live
+        try:
+            from blog_engine import push_to_github
+            filename = f"{slug}.html"
+            push_to_github(filename, content, f"Publish: {slug}")
+            print(f"  ✓ Approved and pushed to GitHub: {filename}")
+        except Exception as e:
+            print(f"  ✗ GitHub push failed: {e}")
+
         src.unlink()
         for extra in [f"{slug}_audit.json", f"{slug}_social.json", f"{slug}_card.html", f"{slug}_sitemap.xml"]:
             p = DRAFTS_DIR / extra
