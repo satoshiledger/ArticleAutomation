@@ -287,7 +287,7 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
     headers = {
         "x-api-key": ANTHROPIC_API_KEY,
         "content-type": "application/json",
-        "anthropic-version": "2023-06-01",
+        "anthropic-version": "2025-01-01",
     }
 
     body = {
