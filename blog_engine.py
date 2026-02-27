@@ -40,6 +40,7 @@ NOTIFY_EMAIL = os.getenv("NOTIFY_EMAIL", "your-email@gmail.com")  # where to rec
 GITHUB_REPO = os.getenv("GITHUB_REPO", "your-username/puertoricollc.com")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
 DASHBOARD_URL = os.getenv("DASHBOARD_URL", "https://your-railway-app.up.railway.app")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")  # Resend.com API key for email (SMTP blocked on Railway)
 DRAFTS_DIR = Path(os.getenv("DRAFTS_DIR", "./drafts"))
 APPROVED_DIR = Path(os.getenv("APPROVED_DIR", "./approved"))
 CALENDAR_PATH = Path(os.getenv("CALENDAR_PATH", "./content_calendar.json"))
@@ -539,7 +540,7 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
 
     kwargs = {
         "model": model,
-        "max_tokens": 12000,
+        "max_tokens": 16000,
         "system": system_prompt,
         "messages": [{"role": "user", "content": user_message}],
     }
@@ -582,37 +583,62 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
 
 
 def send_email(subject: str, body_text: str, body_html: str = ""):
-    """Send an email notification via Gmail SMTP.
-    Tries TLS on port 587 first (works on Railway), falls back to SSL on 465."""
+    """Send email via Resend HTTP API (primary) or Gmail SMTP (fallback).
+    Resend works on Railway since it uses HTTPS, not SMTP ports."""
+    import httpx
+
+    # Try Resend API first (works on Railway — uses HTTPS)
+    if RESEND_API_KEY:
+        try:
+            resp = httpx.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": "PuertoRicoLLC Blog <onboarding@resend.dev>",
+                    "to": [NOTIFY_EMAIL],
+                    "subject": subject,
+                    "text": body_text,
+                    "html": body_html if body_html else body_text,
+                },
+                timeout=30,
+            )
+            if resp.status_code == 200:
+                print(f"  ✓ Email sent via Resend API")
+                return
+            else:
+                print(f"  Resend error {resp.status_code}: {resp.text[:200]}")
+        except Exception as e:
+            print(f"  Resend failed: {e}")
+
+    # Fallback: Gmail SMTP (works outside Railway)
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = GMAIL_ADDRESS
     msg["To"] = NOTIFY_EMAIL
-
     msg.attach(MIMEText(body_text, "plain"))
     if body_html:
         msg.attach(MIMEText(body_html, "html"))
 
-    # Try port 587 (STARTTLS) first — Railway blocks port 465
-    try:
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
-            server.starttls()
-            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
-            print(f"  ✓ Email sent via port 587 (TLS)")
+    for port, method in [(587, "TLS"), (465, "SSL")]:
+        try:
+            if port == 587:
+                with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
+                    server.starttls()
+                    server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                    server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
+            else:
+                with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as server:
+                    server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+                    server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
+            print(f"  ✓ Email sent via Gmail port {port} ({method})")
             return
-    except Exception as e:
-        print(f"  Port 587 failed: {e}, trying port 465...")
+        except Exception as e:
+            print(f"  Gmail port {port} failed: {e}")
 
-    # Fallback: port 465 (SSL)
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as server:
-            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
-            print(f"  ✓ Email sent via port 465 (SSL)")
-    except Exception as e:
-        print(f"  ✗ Email error (both ports failed): {e}")
-        raise
+    print("  ✗ All email methods failed")
 
 
 def load_calendar() -> dict:
