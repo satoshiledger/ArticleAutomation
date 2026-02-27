@@ -281,8 +281,10 @@ If nothing relevant was found, return: {"alerts": [], "no_alerts": true}
 # ---------------------------------------------------------------------------
 
 def call_claude(system_prompt: str, user_message: str, use_web_search: bool = False) -> str:
-    """Call the Anthropic API using the official SDK. Supports web search for live research."""
+    """Call the Anthropic API using the official SDK. Supports web search for live research.
+    Includes retry logic for rate limits (429 errors)."""
     import anthropic
+    import time
 
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
     model = "claude-sonnet-4-5-20250929"
@@ -305,11 +307,22 @@ def call_claude(system_prompt: str, user_message: str, use_web_search: bool = Fa
             "max_uses": 10,
         }]
 
-    try:
-        response = client.messages.create(**kwargs)
-    except anthropic.APIError as e:
-        print(f"  API Error: {e}")
-        raise
+    # Retry up to 3 times with increasing delays for rate limits
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = client.messages.create(**kwargs)
+            break
+        except anthropic.RateLimitError as e:
+            wait_time = 60 * (attempt + 1)  # 60s, 120s, 180s
+            print(f"  Rate limited (attempt {attempt + 1}/{max_retries}). Waiting {wait_time}s...")
+            time.sleep(wait_time)
+            if attempt == max_retries - 1:
+                print(f"  Rate limit persisted after {max_retries} retries.")
+                raise
+        except anthropic.APIError as e:
+            print(f"  API Error: {e}")
+            raise
 
     # Extract text from content blocks
     text_parts = []
@@ -749,6 +762,8 @@ def generate_sitemap_entry(post: dict) -> str:
 
 def run_scheduled_pipeline():
     """Run the full scheduled blog generation pipeline."""
+    import time
+
     calendar = load_calendar()
     post = get_next_scheduled_post(calendar)
 
@@ -768,6 +783,10 @@ def run_scheduled_pipeline():
     draft_path.write_text(html, encoding="utf-8")
     print(f"  ✓ Draft saved: {draft_path}")
 
+    # Wait 65s to reset rate limit window (30k tokens/min)
+    print("  ⏳ Waiting 65s for rate limit reset...")
+    time.sleep(65)
+
     # Pass 2: Audit
     audit = pass2_audit(html, post)
     audit_path = DRAFTS_DIR / f"{post['slug']}_audit.json"
@@ -780,10 +799,16 @@ def run_scheduled_pipeline():
     # Pass 3: Fix critical issues (if any)
     if audit.get("critical_issues"):
         print(f"  ⚠ {len(audit['critical_issues'])} critical issues found — auto-fixing...")
+        print("  ⏳ Waiting 65s for rate limit reset...")
+        time.sleep(65)
+
         html = pass3_fix(html, audit, post)
         draft_path.write_text(html, encoding="utf-8")
 
         # Re-audit the fixed version
+        print("  ⏳ Waiting 65s for rate limit reset...")
+        time.sleep(65)
+
         audit2 = pass2_audit(html, post)
         audit_path.write_text(json.dumps(audit2, indent=2), encoding="utf-8")
         print(f"  ✓ Post-fix audit: Grade {audit2.get('overall_grade', '?')} | "
@@ -791,6 +816,9 @@ def run_scheduled_pipeline():
         audit = audit2
 
     # Pass 4: Social media derivatives
+    print("  ⏳ Waiting 65s for rate limit reset...")
+    time.sleep(65)
+
     social = pass4_social(html, post)
     social_path = DRAFTS_DIR / f"{post['slug']}_social.json"
     social_path.write_text(json.dumps(social, indent=2, ensure_ascii=False), encoding="utf-8")
