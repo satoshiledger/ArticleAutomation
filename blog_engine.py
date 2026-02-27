@@ -281,53 +281,50 @@ If nothing relevant was found, return: {"alerts": [], "no_alerts": true}
 # ---------------------------------------------------------------------------
 
 def call_claude(system_prompt: str, user_message: str, use_web_search: bool = False) -> str:
-    """Call the Anthropic API. Returns the text content of the response."""
-    import httpx
+    """Call the Anthropic API using the official SDK. Supports web search for live research."""
+    import anthropic
 
-    headers = {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "content-type": "application/json",
-        "anthropic-version": "2023-06-01",
-    }
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    model = "claude-sonnet-4-5-20250929"
 
-    body = {
-        "model": "claude-sonnet-4-5-20250929",
+    print(f"  Calling Claude API (model: {model}, web_search: {use_web_search})...")
+
+    kwargs = {
+        "model": model,
         "max_tokens": 16000,
         "system": system_prompt,
         "messages": [{"role": "user", "content": user_message}],
     }
 
-    # Web search disabled for initial deployment — Claude uses training knowledge
-    # To re-enable later, uncomment the lines below and update anthropic-version
-    # if use_web_search:
-    #     body["tools"] = [{"type": "web_search_20250305", "name": "web_search"}]
+    # Web search: lets Claude research current laws, IRS notices, Hacienda circulars
+    # in real time — critical for tax/legal accuracy
+    if use_web_search:
+        kwargs["tools"] = [{
+            "type": "web_search_20250305",
+            "name": "web_search",
+            "max_uses": 10,
+        }]
 
-    print(f"  Calling Claude API (model: {body['model']})...")
-
-    resp = httpx.post(
-        "https://api.anthropic.com/v1/messages",
-        headers=headers,
-        json=body,
-        timeout=300,
-    )
-
-    if resp.status_code != 200:
-        print(f"  API Error {resp.status_code}: {resp.text[:500]}")
-    resp.raise_for_status()
-    data = resp.json()
+    try:
+        response = client.messages.create(**kwargs)
+    except anthropic.APIError as e:
+        print(f"  API Error: {e}")
+        raise
 
     # Extract text from content blocks
     text_parts = []
-    for block in data.get("content", []):
-        if block.get("type") == "text":
-            text_parts.append(block["text"])
+    for block in response.content:
+        if block.type == "text":
+            text_parts.append(block.text)
 
-    print(f"  API response received ({len(text_parts)} text blocks)")
+    print(f"  API response received ({len(text_parts)} text blocks, "
+          f"stop_reason: {response.stop_reason})")
     return "\n".join(text_parts)
 
 
 def send_email(subject: str, body_text: str, body_html: str = ""):
-    """Send an email notification via Gmail SMTP (free, no API key needed)."""
+    """Send an email notification via Gmail SMTP.
+    Tries TLS on port 587 first (works on Railway), falls back to SSL on 465."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = GMAIL_ADDRESS
@@ -337,12 +334,25 @@ def send_email(subject: str, body_text: str, body_html: str = ""):
     if body_html:
         msg.attach(MIMEText(body_html, "html"))
 
+    # Try port 587 (STARTTLS) first — Railway blocks port 465
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=30) as server:
+            server.starttls()
             server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
+            print(f"  ✓ Email sent via port 587 (TLS)")
+            return
     except Exception as e:
-        print(f"  ✗ Email error: {e}")
+        print(f"  Port 587 failed: {e}, trying port 465...")
+
+    # Fallback: port 465 (SSL)
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as server:
+            server.login(GMAIL_ADDRESS, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_ADDRESS, NOTIFY_EMAIL, msg.as_string())
+            print(f"  ✓ Email sent via port 465 (SSL)")
+    except Exception as e:
+        print(f"  ✗ Email error (both ports failed): {e}")
         raise
 
 
