@@ -431,6 +431,32 @@ def save(slug):
     return redirect(f"/review/{slug}")
 
 
+@app.route("/reset/<slug>")
+def reset(slug):
+    """Clear a post from both drafts and approved so it can be regenerated."""
+    cleared = []
+    for folder in [DRAFTS_DIR, APPROVED_DIR]:
+        for pattern in [f"{slug}.html", f"{slug}_audit.json", f"{slug}_social.json", f"{slug}_card.html", f"{slug}_sitemap.xml"]:
+            p = folder / pattern
+            if p.exists():
+                p.unlink()
+                cleared.append(str(p))
+    if cleared:
+        return f"Cleared: {', '.join(cleared)} — post can now be regenerated"
+    return f"No files found for {slug}"
+
+
+@app.route("/reset-all")
+def reset_all():
+    """Clear all drafts and approved files."""
+    cleared = 0
+    for folder in [DRAFTS_DIR, APPROVED_DIR]:
+        for f in folder.glob("*"):
+            f.unlink()
+            cleared += 1
+    return f"Cleared {cleared} files. All posts can now be regenerated."
+
+
 @app.route("/social/<slug>")
 def social(slug):
     data = load_draft(slug)
