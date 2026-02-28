@@ -842,6 +842,93 @@ def get_next_ungenerated_post(calendar: dict) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
+# HERO IMAGE POOL — rotates so every article gets a unique image
+# ---------------------------------------------------------------------------
+
+# Pool of Unsplash images organized by theme.
+# Each cluster cycles through its preferred images, then overflows to others.
+HERO_IMAGE_POOL = [
+    # === ACT 60 COMPLIANCE (6 articles) ===
+    {"id": "aerial-san-juan", "url": "https://images.unsplash.com/photo-1579687196544-08ae57ab5960?w=1200&h=600&fit=crop", "alt": "Aerial view of colorful buildings in Old San Juan, Puerto Rico", "themes": ["act60"]},
+    {"id": "el-morro-fort", "url": "https://images.unsplash.com/photo-1568736333610-eae6e0e6516a?w=1200&h=600&fit=crop", "alt": "Historic El Morro fortress in San Juan, Puerto Rico at sunset", "themes": ["act60"]},
+    {"id": "condado-skyline", "url": "https://images.unsplash.com/photo-1580745089072-62a10aa3e6a2?w=1200&h=600&fit=crop", "alt": "Condado district skyline in San Juan, Puerto Rico", "themes": ["act60"]},
+    {"id": "pr-capitol", "url": "https://images.unsplash.com/photo-1595880500386-4b33c6192cc1?w=1200&h=600&fit=crop", "alt": "Puerto Rico Capitol building in San Juan", "themes": ["act60"]},
+    {"id": "old-san-juan-street", "url": "https://images.unsplash.com/photo-1560703650-ef3e0f254ae0?w=1200&h=600&fit=crop", "alt": "Colorful cobblestone streets of Old San Juan, Puerto Rico", "themes": ["act60"]},
+    {"id": "pr-flag-building", "url": "https://images.unsplash.com/photo-1608483099860-12be8ccdf5e4?w=1200&h=600&fit=crop", "alt": "Puerto Rico door painted with the island flag in Old San Juan", "themes": ["act60"]},
+
+    # === BITCOIN TAX (6 articles) ===
+    {"id": "bitcoin-digital", "url": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=1200&h=600&fit=crop", "alt": "Bitcoin digital currency concept with golden coin", "themes": ["bitcoin"]},
+    {"id": "bitcoin-chart", "url": "https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=1200&h=600&fit=crop", "alt": "Bitcoin trading chart and financial data analysis", "themes": ["bitcoin"]},
+    {"id": "bitcoin-hardware", "url": "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=1200&h=600&fit=crop", "alt": "Physical Bitcoin coins representing digital currency investment", "themes": ["bitcoin"]},
+    {"id": "bitcoin-laptop", "url": "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=1200&h=600&fit=crop", "alt": "Bitcoin on laptop keyboard representing digital finance", "themes": ["bitcoin"]},
+    {"id": "bitcoin-network", "url": "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=1200&h=600&fit=crop", "alt": "Bitcoin blockchain network visualization", "themes": ["bitcoin"]},
+    {"id": "bitcoin-mining", "url": "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=1200&h=600&fit=crop", "alt": "Bitcoin mining hardware and technology setup", "themes": ["bitcoin"]},
+
+    # === TAX STRATEGY (5 articles) ===
+    {"id": "pr-coastline", "url": "https://images.unsplash.com/photo-1580226905576-cfb36e4e5306?w=1200&h=600&fit=crop", "alt": "Beautiful coastline of Puerto Rico with turquoise waters", "themes": ["tax-strategy"]},
+    {"id": "pr-palm-beach", "url": "https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?w=1200&h=600&fit=crop", "alt": "Palm trees on a pristine Puerto Rico beach", "themes": ["tax-strategy"]},
+    {"id": "financial-planning", "url": "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=600&fit=crop", "alt": "Financial documents and calculator for tax planning", "themes": ["tax-strategy"]},
+    {"id": "pr-rainforest", "url": "https://images.unsplash.com/photo-1586348943529-beaae6c28db9?w=1200&h=600&fit=crop", "alt": "Lush El Yunque rainforest in Puerto Rico", "themes": ["tax-strategy"]},
+    {"id": "pr-sunset-ocean", "url": "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=1200&h=600&fit=crop", "alt": "Stunning sunset over the ocean in Puerto Rico", "themes": ["tax-strategy"]},
+
+    # === BUSINESS STRUCTURE (4 articles) ===
+    {"id": "tropical-office", "url": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&h=600&fit=crop", "alt": "Modern office workspace with tropical view", "themes": ["business-structure"]},
+    {"id": "business-meeting", "url": "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?w=1200&h=600&fit=crop", "alt": "Professional business consultation meeting", "themes": ["business-structure"]},
+    {"id": "signing-documents", "url": "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1200&h=600&fit=crop", "alt": "Professional signing business formation documents", "themes": ["business-structure"]},
+    {"id": "startup-desk", "url": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200&h=600&fit=crop", "alt": "Startup workspace with laptop and business planning materials", "themes": ["business-structure"]},
+
+    # === OPERATIONS / BOOKKEEPING (3 articles) ===
+    {"id": "accounting-desk", "url": "https://images.unsplash.com/photo-1543286386-713bdd548da4?w=1200&h=600&fit=crop", "alt": "Organized accounting desk with spreadsheets and laptop", "themes": ["tax-strategy"]},
+    {"id": "calendar-planning", "url": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=1200&h=600&fit=crop", "alt": "Calendar and planning tools for business deadline management", "themes": ["tax-strategy"]},
+    {"id": "pr-marina", "url": "https://images.unsplash.com/photo-1580137197581-df2bb346a3e9?w=1200&h=600&fit=crop", "alt": "Marina and waterfront in Puerto Rico with boats and skyline", "themes": ["tax-strategy"]},
+]
+
+
+def select_hero_image(post: dict, calendar: dict) -> dict:
+    """Select a unique hero image for this post based on its cluster.
+    Ensures no two articles use the same image by tracking what's been used."""
+    import hashlib
+
+    category = calendar["clusters"][post["cluster"]]["category_tag"]
+
+    # Track which images have already been used (by checking approved + draft files)
+    used_images = set()
+    for folder in [DRAFTS_DIR, APPROVED_DIR]:
+        if folder.exists():
+            for f in folder.glob("*.html"):
+                try:
+                    content = f.read_text(encoding="utf-8")
+                    for img in HERO_IMAGE_POOL:
+                        if img["url"] in content:
+                            used_images.add(img["id"])
+                except:
+                    pass
+
+    # First: try images themed for this category that haven't been used
+    themed = [img for img in HERO_IMAGE_POOL if category in img["themes"] and img["id"] not in used_images]
+    if themed:
+        # Pick deterministically based on slug so same slug always gets same image
+        idx = int(hashlib.md5(post["slug"].encode()).hexdigest(), 16) % len(themed)
+        return themed[idx]
+
+    # Second: try ANY unused image
+    unused = [img for img in HERO_IMAGE_POOL if img["id"] not in used_images]
+    if unused:
+        idx = int(hashlib.md5(post["slug"].encode()).hexdigest(), 16) % len(unused)
+        return unused[idx]
+
+    # Fallback: all images used, cycle through themed images
+    all_themed = [img for img in HERO_IMAGE_POOL if category in img["themes"]]
+    if all_themed:
+        idx = int(hashlib.md5(post["slug"].encode()).hexdigest(), 16) % len(all_themed)
+        return all_themed[idx]
+
+    # Ultimate fallback
+    idx = int(hashlib.md5(post["slug"].encode()).hexdigest(), 16) % len(HERO_IMAGE_POOL)
+    return HERO_IMAGE_POOL[idx]
+
+
+# ---------------------------------------------------------------------------
 # PASS 1 — RESEARCH & GENERATE
 # ---------------------------------------------------------------------------
 
@@ -849,6 +936,10 @@ def pass1_generate(post: dict, calendar: dict) -> str:
     """Generate the blog post HTML using Claude API with web search for source verification."""
 
     cluster_info = calendar["clusters"][post["cluster"]]
+
+    # Select hero image — rotate by cluster so no two articles in the same
+    # category use the same image, and different categories feel visually distinct.
+    hero_image = select_hero_image(post, calendar)
 
     user_message = f"""Generate a complete blog post HTML file for PuertoRicoLLC.com.
 
@@ -865,6 +956,12 @@ def pass1_generate(post: dict, calendar: dict) -> str:
 - Publish date: {datetime.now().strftime('%B %d, %Y')}
 - Full URL: {SITE_URL}/{post['slug']}.html
 
+## HERO IMAGE (MANDATORY — use these exact values)
+- Image URL: {hero_image['url']}
+- Image alt text: {hero_image['alt']}
+Replace {{{{HERO_IMAGE_URL}}}} with: {hero_image['url']}
+Replace {{{{HERO_IMAGE_ALT}}}} with: {hero_image['alt']}
+
 ## INSTRUCTIONS
 1. FIRST, use web search to find the CURRENT text/provisions of each required source.
    Search for the actual government publications. Do NOT rely on memory for any numbers.
@@ -878,6 +975,7 @@ Output ONLY the complete HTML file. No explanation, no analysis, no preamble.
 Start with <!DOCTYPE html> and end with </html>.
 """
 
+    print(f"  [Pass 1] Hero image: {hero_image['url']}")
     print("  [Pass 1] Generating blog post with web search for source verification...")
     html = call_claude(PASS1_SYSTEM_PROMPT, user_message, use_web_search=True)
 
