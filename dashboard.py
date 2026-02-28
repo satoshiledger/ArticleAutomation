@@ -446,6 +446,21 @@ def trigger_news():
     return redirect("/")
 
 
+@app.route("/repush")
+def repush_approved():
+    """Re-push all approved files to GitHub (for files that were approved before GitHub push was added)."""
+    from blog_engine import push_to_github
+    results = []
+    for f in APPROVED_DIR.glob("*.html"):
+        try:
+            content = f.read_text(encoding="utf-8")
+            ok = push_to_github(f.name, content, f"Publish: {f.stem}")
+            results.append(f"{f.name}: {'✓' if ok else '✗'}")
+        except Exception as e:
+            results.append(f"{f.name}: error - {e}")
+    return "<br>".join(results) if results else "No approved files found"
+
+
 # ---------------------------------------------------------------------------
 # ENTRY POINT
 # ---------------------------------------------------------------------------
