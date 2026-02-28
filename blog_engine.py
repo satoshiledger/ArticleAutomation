@@ -698,6 +698,118 @@ def load_calendar() -> dict:
         return json.load(f)
 
 
+# Color mapping for blog card gradients by cluster
+CLUSTER_COLORS = {
+    "1_act60_compliance": "from-green-600 to-green-500",
+    "2_business_structure": "from-teal-600 to-teal-500",
+    "3_bitcoin": "from-orange-600 to-amber-500",
+    "4_tax_strategy": "from-blue-600 to-blue-500",
+    "5_operations": "from-purple-600 to-purple-500",
+}
+
+# Category mapping for filter tabs
+CLUSTER_CATEGORIES = {
+    "1_act60_compliance": "act60",
+    "2_business_structure": "business-structure",
+    "3_bitcoin": "bitcoin",
+    "4_tax_strategy": "tax-strategy",
+    "5_operations": "tax-strategy",
+}
+
+
+def update_blog_index(post: dict, calendar: dict) -> bool:
+    """Fetch blog.html from GitHub, inject a new article entry into the JS array, and push it back.
+    This keeps the blog index page up to date automatically when articles are approved."""
+    import httpx
+    import base64
+
+    if not GITHUB_TOKEN or not GITHUB_REPO:
+        print("  ✗ Blog index update skipped: no GitHub credentials")
+        return False
+
+    api_url = f"https://api.github.com/repos/{GITHUB_REPO}/contents/blog.html"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    # Fetch current blog.html
+    try:
+        resp = httpx.get(api_url, headers=headers, timeout=30)
+        if resp.status_code != 200:
+            print(f"  ✗ Could not fetch blog.html ({resp.status_code})")
+            return False
+        file_data = resp.json()
+        sha = file_data["sha"]
+        blog_html = base64.b64decode(file_data["content"]).decode("utf-8")
+    except Exception as e:
+        print(f"  ✗ Error fetching blog.html: {e}")
+        return False
+
+    # Check if article already exists in the array
+    if post["slug"] in blog_html:
+        print(f"  ℹ Article already in blog index: {post['slug']}")
+        return True
+
+    # Build the new article entry
+    cluster = post.get("cluster", "4_tax_strategy")
+    cluster_info = calendar.get("clusters", {}).get(cluster, {})
+    category = CLUSTER_CATEGORIES.get(cluster, "tax-strategy")
+    color = CLUSTER_COLORS.get(cluster, "from-blue-600 to-blue-500")
+    tag_en = cluster_info.get("category_label_en", "Tax Strategy")
+    tag_es = cluster_info.get("category_label_es", "Estrategia Fiscal")
+    today = datetime.now()
+    date_en = today.strftime("%B %d, %Y")
+    date_es = today.strftime("%d %B %Y")
+
+    # Escape quotes in titles for JS
+    title_en = post["title_en"].replace('"', '\\"')
+    title_es = post["title_es"].replace('"', '\\"')
+
+    new_entry = f"""        {{
+            category: "{category}",
+            color: "{color}",
+            tagEN: "{tag_en}", tagES: "{tag_es}",
+            titleEN: "{title_en}",
+            titleES: "{title_es}",
+            date: "{date_en}", dateES: "{date_es}", readTime: 12,
+            descEN: "Read the full article for expert analysis on this topic with real-world examples and official source citations.",
+            descES: "Lea el art\\u00edculo completo para an\\u00e1lisis experto con ejemplos reales y citas de fuentes oficiales.",
+            url: "{post['slug']}.html"
+        }},"""
+
+    # Inject at the top of the articles array (after "const articles = [")
+    marker = "const articles = ["
+    idx = blog_html.find(marker)
+    if idx == -1:
+        print("  ✗ Could not find articles array in blog.html")
+        return False
+
+    insert_pos = idx + len(marker) + 1  # +1 for newline
+    updated_html = blog_html[:insert_pos] + new_entry + "\n" + blog_html[insert_pos:]
+
+    # Push updated blog.html
+    encoded = base64.b64encode(updated_html.encode("utf-8")).decode("utf-8")
+    body = {
+        "message": f"Add blog card: {post['slug']}",
+        "content": encoded,
+        "sha": sha,
+        "branch": "main",
+    }
+
+    try:
+        resp = httpx.put(api_url, headers=headers, json=body, timeout=30)
+        if resp.status_code in (200, 201):
+            print(f"  ✓ Blog index updated with new article: {post['slug']}")
+            return True
+        else:
+            print(f"  ✗ Blog index push failed ({resp.status_code}): {resp.text[:200]}")
+            return False
+    except Exception as e:
+        print(f"  ✗ Blog index update error: {e}")
+        return False
+
+
 def get_next_scheduled_post(calendar: dict) -> dict | None:
     """Determine which post to generate based on today's date and day of week."""
     today = datetime.now()
