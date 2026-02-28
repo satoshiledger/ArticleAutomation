@@ -830,6 +830,17 @@ def get_next_scheduled_post(calendar: dict) -> dict | None:
     return None
 
 
+def get_next_ungenerated_post(calendar: dict) -> dict | None:
+    """Get the next post that hasn't been generated yet, regardless of day.
+    Used for manual 'Generate Now' triggers."""
+    for post in calendar["posts"]:
+        draft_path = DRAFTS_DIR / f"{post['slug']}.html"
+        approved_path = APPROVED_DIR / f"{post['slug']}.html"
+        if not draft_path.exists() and not approved_path.exists():
+            return post
+    return None
+
+
 # ---------------------------------------------------------------------------
 # PASS 1 — RESEARCH & GENERATE
 # ---------------------------------------------------------------------------
@@ -1210,15 +1221,34 @@ def generate_sitemap_entry(post: dict) -> str:
 # ---------------------------------------------------------------------------
 
 def run_scheduled_pipeline():
-    """Run the full scheduled blog generation pipeline."""
-    import time
-
+    """Run the full scheduled blog generation pipeline.
+    Picks the next ungenerated post in the calendar regardless of day."""
     calendar = load_calendar()
-    post = get_next_scheduled_post(calendar)
+    post = get_next_ungenerated_post(calendar)
 
     if not post:
-        print("No scheduled post for today or all posts already generated.")
+        print("All posts in the calendar have been generated.")
         return
+
+    _run_pipeline(post, calendar)
+
+
+def run_manual_pipeline():
+    """Run the pipeline for the next ungenerated post (ignores day-of-week).
+    Used by the 'Generate Now' button."""
+    calendar = load_calendar()
+    post = get_next_ungenerated_post(calendar)
+
+    if not post:
+        print("All posts in the calendar have been generated.")
+        return
+
+    _run_pipeline(post, calendar)
+
+
+def _run_pipeline(post: dict, calendar: dict):
+    """Core pipeline logic shared by scheduled and manual triggers."""
+    import time
 
     print(f"\n{'='*60}")
     print(f"GENERATING: {post['title_en']}")
