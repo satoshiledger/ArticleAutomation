@@ -1246,6 +1246,43 @@ def run_manual_pipeline():
     _run_pipeline(post, calendar)
 
 
+def run_custom_pipeline(title: str, keywords: str, cluster: str = "4_tax_strategy", cta: str = "consultation"):
+    """Run the pipeline for a custom topic (not from the calendar).
+    Used by the 'Generate Custom Article' form on the dashboard."""
+    import re
+
+    # Build a slug from the title
+    slug = "blog-" + re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')[:80]
+
+    # Build a post dict matching calendar format
+    post = {
+        "week": 0,
+        "day": "custom",
+        "cluster": cluster,
+        "slug": slug,
+        "title_en": title,
+        "title_es": title,  # Will be English; user can edit in review
+        "keywords": keywords,
+        "sources_required": [],
+        "cta": cta,
+        "seo_intent": "custom",
+        "target_serp": keywords.split(",")[0].strip() if keywords else title,
+        "est_monthly_volume": 0,
+        "lead_score": 8,
+    }
+
+    calendar = load_calendar()
+
+    print(f"\n{'='*60}")
+    print(f"CUSTOM ARTICLE: {title}")
+    print(f"Keywords: {keywords}")
+    print(f"Cluster: {cluster} | CTA: {cta}")
+    print(f"Slug: {slug}")
+    print(f"{'='*60}\n")
+
+    _run_pipeline(post, calendar)
+
+
 def _run_pipeline(post: dict, calendar: dict):
     """Core pipeline logic shared by scheduled and manual triggers."""
     import time
@@ -1340,19 +1377,105 @@ def run_news_monitor_pipeline():
         print("  No new regulatory developments detected today.")
         return
 
+    # Save alerts to disk so they can be triggered later from dashboard
+    alerts_dir = DRAFTS_DIR.parent / "alerts"
+    alerts_dir.mkdir(exist_ok=True)
+
     for alert in report.get("alerts", []):
         print(f"\n  🔴 ALERT: {alert.get('headline', 'Unknown')}")
         print(f"     Source: {alert.get('source', 'Unknown')}")
         print(f"     Urgency: {alert.get('urgency', 'Unknown')}")
 
+        # Generate a unique alert ID
+        import hashlib
+        alert_id = hashlib.md5(alert.get("headline", "").encode()).hexdigest()[:12]
+        alert["alert_id"] = alert_id
+        alert["timestamp"] = datetime.now().isoformat()
+        alert["status"] = "pending"  # pending → generating → drafted → approved
+
+        # Determine cluster and keywords from alert
+        cluster = alert.get("cluster", "4_tax_strategy")
+        # Map common cluster names to our IDs
+        cluster_map = {
+            "bitcoin": "3_bitcoin",
+            "act60": "1_act60_compliance",
+            "act_60": "1_act60_compliance",
+            "compliance": "1_act60_compliance",
+            "business": "2_business_structure",
+            "tax": "4_tax_strategy",
+            "operations": "5_operations",
+        }
+        for key, val in cluster_map.items():
+            if key in cluster.lower():
+                cluster = val
+                break
+        if not cluster.startswith(("1_", "2_", "3_", "4_", "5_")):
+            cluster = "4_tax_strategy"
+        alert["cluster_id"] = cluster
+
+        # Save alert to disk
+        alert_path = alerts_dir / f"{alert_id}.json"
+        alert_path.write_text(json.dumps(alert, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"     Saved alert: {alert_id}")
+
+        # Send email with "Approve & Generate" button
         try:
-            subject, plain, html = format_news_alert(alert)
+            subject, plain, html = format_news_alert_with_button(alert)
             send_email(subject, plain, html)
             print(f"     ✓ Email alert sent")
         except Exception as e:
             print(f"     ✗ Email error: {e}")
-            subject, plain, _ = format_news_alert(alert)
-            print(f"     Subject: {subject}")
+
+
+def format_news_alert_with_button(alert: dict) -> tuple[str, str, str]:
+    """Format a news alert email with an 'Approve & Generate' button."""
+
+    dashboard_url = os.getenv("DASHBOARD_URL", "https://web-production-36855.up.railway.app")
+    alert_id = alert.get("alert_id", "unknown")
+    generate_url = f"{dashboard_url}/generate-alert/{alert_id}"
+
+    subject = f"🔴 New Content Opportunity: {alert.get('headline', 'Regulatory Update')[:50]}"
+
+    plain_text = f"""BREAKING: Content Opportunity Detected
+
+Headline: {alert['headline']}
+Source: {alert['source']}
+Relevance: {alert['relevance']}
+Urgency: {alert['urgency']}
+
+Suggested post: "{alert['suggested_title']}"
+Cluster: {alert.get('cluster', 'N/A')}
+
+To generate this article, click: {generate_url}
+"""
+
+    html = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <div style="background: #0F172A; padding: 20px 24px; border-radius: 12px 12px 0 0;">
+        <span style="color: #CC0000; font-weight: 900; font-size: 18px;">PuertoRico</span><span style="color: #3A99D8; font-weight: 900; font-size: 18px;">LLC</span>
+        <span style="color: #EF4444; font-size: 14px; margin-left: 8px;">⚡ ALERT</span>
+      </div>
+      <div style="background: #ffffff; border: 1px solid #E2E8F0; padding: 24px; border-radius: 0 0 12px 12px;">
+        <div style="background: #FEF2F2; border-left: 4px solid #EF4444; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
+          <strong style="font-size: 14px; color: #991B1B;">🔴 Urgency: {alert['urgency']}</strong>
+        </div>
+        <h2 style="color: #0F172A; font-size: 20px; margin: 0 0 12px 0;">{alert['headline']}</h2>
+        <p style="color: #475569; font-size: 14px;"><strong>Source:</strong> {alert['source']}</p>
+        <p style="color: #475569; font-size: 14px;"><strong>Why it matters:</strong> {alert['relevance']}</p>
+        <div style="background: #F8FAFC; padding: 16px; border-radius: 8px; margin: 16px 0;">
+          <p style="color: #64748B; font-size: 13px; margin: 0 0 4px 0;">Suggested blog post:</p>
+          <p style="color: #0F172A; font-weight: bold; margin: 0;">&ldquo;{alert['suggested_title']}&rdquo;</p>
+          <p style="color: #64748B; font-size: 12px; margin: 8px 0 0 0;">Category: {alert.get('cluster', 'Tax Strategy')}</p>
+        </div>
+        <div style="text-align: center; margin: 24px 0 16px 0;">
+          <a href="{generate_url}" style="display: inline-block; background: #16A34A; color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">✅ Approve &amp; Generate Article</a>
+        </div>
+        <p style="color: #94A3B8; font-size: 11px; text-align: center;">Clicking will start article generation (~8 min). You'll review it before publishing.</p>
+      </div>
+    </div>
+    """
+
+    return subject, plain_text, html
 
 
 # ---------------------------------------------------------------------------
