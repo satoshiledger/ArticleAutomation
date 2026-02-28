@@ -745,15 +745,14 @@ def pass1_generate(post: dict, calendar: dict) -> str:
 ## INSTRUCTIONS
 1. FIRST, use web search to find the CURRENT text/provisions of each required source.
    Search for the actual government publications. Do NOT rely on memory for any numbers.
-2. Write a comprehensive 2,000-2,500 word article (English) with full Spanish translation.
+2. Write a comprehensive 2,000-2,500 word article in English.
 3. Include at least 3 real-world examples with dollar amounts.
 4. Cite every factual claim with the specific law section or government source.
 5. Include a Sources & References section at the bottom with URLs.
-6. Match the exact HTML template structure of existing PuertoRicoLLC.com blog posts
-   (Tailwind CSS, slate-900 nav, bilingual data-lang attributes, WhatsApp float button, 
-   social share buttons, GA tracking code {GA_TRACKING_ID}).
+6. Use the EXACT HTML template provided in your system prompt. Do not invent your own layout.
 
-Output ONLY the complete HTML file. No explanation.
+Output ONLY the complete HTML file. No explanation, no analysis, no preamble.
+Start with <!DOCTYPE html> and end with </html>.
 """
 
     print("  [Pass 1] Generating blog post with web search for source verification...")
@@ -762,7 +761,13 @@ Output ONLY the complete HTML file. No explanation.
     # Clean any markdown fencing if present
     html = re.sub(r"^```html?\s*", "", html, flags=re.MULTILINE)
     html = re.sub(r"```\s*$", "", html, flags=re.MULTILINE)
-    html = html.strip()
+
+    # Extract ONLY the HTML — Claude sometimes prepends analysis text
+    html_match = re.search(r"(<!DOCTYPE html.*</html>)", html, re.DOTALL | re.IGNORECASE)
+    if html_match:
+        html = html_match.group(1).strip()
+    else:
+        html = html.strip()
 
     return html
 
@@ -827,16 +832,25 @@ def pass3_fix(html: str, audit: dict, post: dict) -> str:
 ## ORIGINAL HTML
 {html}
 
-Output ONLY the corrected complete HTML file.
+Output ONLY the corrected complete HTML file. No explanation, no analysis, no preamble.
+Start with <!DOCTYPE html> and end with </html>.
 """
 
     print("  [Pass 3] Fixing critical issues...")
     fixed = call_claude(PASS3_FIX_PROMPT, user_message, use_web_search=False)
 
+    # Strip markdown fences
     fixed = re.sub(r"^```html?\s*", "", fixed, flags=re.MULTILINE)
     fixed = re.sub(r"```\s*$", "", fixed, flags=re.MULTILINE)
 
-    return fixed.strip()
+    # Extract ONLY the HTML — Claude sometimes prepends analysis text
+    html_match = re.search(r"(<!DOCTYPE html.*</html>)", fixed, re.DOTALL | re.IGNORECASE)
+    if html_match:
+        return html_match.group(1).strip()
+
+    # If no valid HTML found, return original to avoid corruption
+    print("  ⚠ Pass 3 did not return valid HTML — keeping original")
+    return html
 
 
 # ---------------------------------------------------------------------------
