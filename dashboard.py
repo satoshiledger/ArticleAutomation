@@ -380,10 +380,26 @@ def approve(slug):
 
         # Push to GitHub → triggers Hostinger deployment → goes live
         try:
-            from blog_engine import push_to_github
+            from blog_engine import push_to_github, update_blog_index, load_calendar
             filename = f"{slug}.html"
             push_to_github(filename, content, f"Publish: {slug}")
             print(f"  ✓ Approved and pushed to GitHub: {filename}")
+
+            # Update blog.html index page with new article card
+            try:
+                calendar = load_calendar()
+                # Find the post in the calendar by slug
+                post = None
+                for p in calendar.get("posts", []):
+                    if p["slug"] == slug:
+                        post = p
+                        break
+                if post:
+                    update_blog_index(post, calendar)
+                else:
+                    print(f"  ⚠ Post {slug} not found in calendar — blog index not updated")
+            except Exception as e:
+                print(f"  ⚠ Blog index update failed: {e}")
         except Exception as e:
             print(f"  ✗ GitHub push failed: {e}")
 
