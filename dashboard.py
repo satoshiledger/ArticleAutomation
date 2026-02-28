@@ -88,6 +88,7 @@ DASHBOARD_TEMPLATE = """
                 <span class="text-slate-500 text-sm">Blog Engine</span>
             </div>
             <div class="flex items-center gap-4">
+                <a href="/alerts" class="text-slate-400 hover:text-white text-sm transition">📡 Alerts</a>
                 <span class="text-sm text-slate-400">{{ drafts|length }} drafts pending</span>
                 <a href="/trigger/blog" class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
                    onclick="this.textContent='Generating...'; this.style.opacity='0.5';">
@@ -153,6 +154,53 @@ DASHBOARD_TEMPLATE = """
         {% endfor %}
         </div>
         {% endif %}
+
+        <!-- Custom Article Generator -->
+        <h2 class="text-2xl font-black mt-12 mb-6">🚀 Generate Custom Article</h2>
+        <div class="bg-slate-900 rounded-2xl p-6 border border-slate-800">
+            <p class="text-slate-400 text-sm mb-4">Generate an article on any topic — from news alerts, client questions, or trending topics. Runs independently from the content calendar.</p>
+            <form action="/trigger/custom" method="POST" onsubmit="this.querySelector('button[type=submit]').textContent='⏳ Generating...'; this.querySelector('button[type=submit]').style.opacity='0.5';">
+                <div class="grid md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="text-sm font-bold text-slate-300 block mb-1">Article Title *</label>
+                        <input type="text" name="title" required placeholder="e.g. IRS Form 1099-DA: New Bitcoin Reporting Requirements for 2026"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-300 block mb-1">Target Keywords</label>
+                        <input type="text" name="keywords" placeholder="e.g. IRS 1099-DA, bitcoin reporting 2026, bitcoin cost basis"
+                               class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="text-sm font-bold text-slate-300 block mb-1">Category</label>
+                        <select name="cluster" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
+                            <option value="1_act60_compliance">Act 60 Compliance</option>
+                            <option value="2_business_structure">Business Structure</option>
+                            <option value="3_bitcoin">Bitcoin & Tax</option>
+                            <option value="4_tax_strategy" selected>Tax Strategy</option>
+                            <option value="5_operations">Bookkeeping & Operations</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-sm font-bold text-slate-300 block mb-1">CTA Service</label>
+                        <select name="cta" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none">
+                            <option value="consultation" selected>Consultation</option>
+                            <option value="llc-formation">LLC Formation</option>
+                            <option value="forensic-audit">Forensic Audit</option>
+                            <option value="bookkeeping">Bookkeeping</option>
+                            <option value="bitcoin-accounting">Bitcoin Accounting</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-700 transition">
+                            🚀 Generate Article
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </main>
 </body>
 </html>
@@ -470,11 +518,110 @@ def social(slug):
 def trigger_blog():
     def run():
         try:
-            run_scheduled_pipeline()
+            from blog_engine import run_manual_pipeline
+            run_manual_pipeline()
         except Exception as e:
             print(f"Blog generation error: {e}")
     threading.Thread(target=run, daemon=True).start()
     return redirect("/")
+
+
+@app.route("/trigger/custom", methods=["POST"])
+def trigger_custom():
+    title = request.form.get("title", "").strip()
+    keywords = request.form.get("keywords", "").strip()
+    cluster = request.form.get("cluster", "4_tax_strategy")
+    cta = request.form.get("cta", "consultation")
+    if not title:
+        return redirect("/")
+    def run():
+        try:
+            from blog_engine import run_custom_pipeline
+            run_custom_pipeline(title, keywords, cluster, cta)
+        except Exception as e:
+            print(f"Custom article error: {e}")
+    threading.Thread(target=run, daemon=True).start()
+    return redirect("/")
+
+
+@app.route("/generate-alert/<alert_id>")
+def generate_alert(alert_id):
+    """One-click article generation from a news alert email."""
+    alerts_dir = DRAFTS_DIR.parent / "alerts"
+    alert_path = alerts_dir / f"{alert_id}.json"
+
+    if not alert_path.exists():
+        return f"Alert {alert_id} not found. It may have already been generated or expired.", 404
+
+    alert = json.loads(alert_path.read_text(encoding="utf-8"))
+
+    if alert.get("status") == "generating":
+        return "⏳ This article is already being generated. Check your dashboard in ~8 minutes."
+
+    if alert.get("status") == "drafted":
+        return f'✅ Article already generated! <a href="/">Go to dashboard to review →</a>'
+
+    # Mark as generating
+    alert["status"] = "generating"
+    alert_path.write_text(json.dumps(alert, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def run():
+        try:
+            from blog_engine import run_custom_pipeline
+            title = alert.get("suggested_title", alert.get("headline", "Untitled"))
+            keywords = alert.get("suggested_keywords", alert.get("headline", ""))
+            cluster = alert.get("cluster_id", "4_tax_strategy")
+
+            # Map CTA from cluster
+            cta_map = {
+                "1_act60_compliance": "consultation",
+                "2_business_structure": "llc-formation",
+                "3_bitcoin": "bitcoin-accounting",
+                "4_tax_strategy": "consultation",
+                "5_operations": "bookkeeping",
+            }
+            cta = cta_map.get(cluster, "consultation")
+
+            run_custom_pipeline(title, keywords, cluster, cta)
+
+            # Mark as drafted
+            alert["status"] = "drafted"
+            alert_path.write_text(json.dumps(alert, indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception as e:
+            print(f"Alert generation error: {e}")
+            alert["status"] = "error"
+            alert["error"] = str(e)
+            alert_path.write_text(json.dumps(alert, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    threading.Thread(target=run, daemon=True).start()
+
+    return f"""
+    <html><head><meta charset="UTF-8"><title>Generating Article</title>
+    <script src="https://cdn.tailwindcss.com"></script></head>
+    <body class="bg-slate-950 text-white flex items-center justify-center min-h-screen">
+        <div class="text-center max-w-md">
+            <div class="text-6xl mb-6">⚡</div>
+            <h1 class="text-2xl font-black mb-4">Article Generation Started</h1>
+            <p class="text-slate-400 mb-2"><strong>Topic:</strong> {alert.get('suggested_title', alert.get('headline', ''))}</p>
+            <p class="text-slate-500 text-sm mb-6">The 4-pass pipeline is running (~8 minutes). You'll receive an email when the draft is ready for review.</p>
+            <a href="/" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition">Go to Dashboard</a>
+        </div>
+    </body></html>
+    """
+
+
+@app.route("/alerts")
+def view_alerts():
+    """View all saved news alerts and their status."""
+    alerts_dir = DRAFTS_DIR.parent / "alerts"
+    alerts_dir.mkdir(exist_ok=True)
+    alerts = []
+    for f in sorted(alerts_dir.glob("*.json"), key=lambda x: x.stat().st_mtime, reverse=True):
+        try:
+            alerts.append(json.loads(f.read_text(encoding="utf-8")))
+        except:
+            pass
+    return render_template_string(ALERTS_TEMPLATE, alerts=alerts)
 
 
 @app.route("/trigger/news")
@@ -501,6 +648,70 @@ def repush_approved():
         except Exception as e:
             results.append(f"{f.name}: error - {e}")
     return "<br>".join(results) if results else "No approved files found"
+
+
+ALERTS_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Alerts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-white min-h-screen">
+    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-slate-400 hover:text-white transition">← Dashboard</a>
+                <span class="text-lg font-bold">📡 News Alerts</span>
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        {% if not alerts %}
+        <div class="bg-slate-900 rounded-2xl p-12 text-center border border-slate-800">
+            <p class="text-xl text-slate-400">No news alerts yet.</p>
+            <p class="text-sm text-slate-600 mt-2">The news monitor runs daily at 6:00 AM EST.</p>
+        </div>
+        {% endif %}
+        <div class="grid gap-4">
+        {% for a in alerts %}
+            <div class="bg-slate-900 rounded-2xl p-6 border border-slate-800">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            {% if a.status == 'drafted' %}
+                                <span class="bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">DRAFTED</span>
+                            {% elif a.status == 'generating' %}
+                                <span class="bg-yellow-600 text-white text-xs font-bold px-3 py-1 rounded-full">GENERATING</span>
+                            {% elif a.status == 'error' %}
+                                <span class="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">ERROR</span>
+                            {% else %}
+                                <span class="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">PENDING</span>
+                            {% endif %}
+                            <span class="text-red-400 text-xs font-bold">{{ a.urgency }}</span>
+                            <span class="text-slate-600 text-xs">{{ a.timestamp[:16] }}</span>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-1">{{ a.headline }}</h3>
+                        <p class="text-slate-400 text-sm mb-2">{{ a.source }}</p>
+                        <p class="text-slate-500 text-sm">Suggested: "{{ a.suggested_title }}"</p>
+                    </div>
+                    <div class="ml-4">
+                        {% if a.status == 'pending' %}
+                            <a href="/generate-alert/{{ a.alert_id }}" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-700 transition whitespace-nowrap">✅ Generate</a>
+                        {% elif a.status == 'drafted' %}
+                            <a href="/" class="text-green-400 text-sm hover:underline">View in drafts →</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    </main>
+</body>
+</html>
+"""
 
 
 # ---------------------------------------------------------------------------
