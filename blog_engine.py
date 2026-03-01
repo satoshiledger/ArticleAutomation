@@ -43,10 +43,12 @@ DASHBOARD_URL = os.getenv("DASHBOARD_URL", "https://your-railway-app.up.railway.
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")  # Resend.com API key for email (SMTP blocked on Railway)
 DRAFTS_DIR = Path(os.getenv("DRAFTS_DIR", "./drafts"))
 APPROVED_DIR = Path(os.getenv("APPROVED_DIR", "./approved"))
+PRE_GENERATED_DIR = Path(os.getenv("PRE_GENERATED_DIR", "./pre-generated"))
 CALENDAR_PATH = Path(os.getenv("CALENDAR_PATH", "./content_calendar.json"))
 
 DRAFTS_DIR.mkdir(exist_ok=True)
 APPROVED_DIR.mkdir(exist_ok=True)
+PRE_GENERATED_DIR.mkdir(exist_ok=True)
 
 SITE_URL = "https://puertoricollc.com"
 GA_TRACKING_ID = "G-L7DET25V5W"
@@ -1382,7 +1384,18 @@ def run_custom_pipeline(title: str, keywords: str, cluster: str = "4_tax_strateg
 
 
 def _run_pipeline(post: dict, calendar: dict):
-    """Core pipeline logic shared by scheduled and manual triggers."""
+    """Core pipeline logic shared by scheduled and manual triggers.
+    
+    NEW FLOW (v3.1 — pre-generated article support):
+    1. Check if a pre-generated HTML exists in PRE_GENERATED_DIR
+    2. If YES: skip Pass 1 (save API credits), use the pre-written article
+    3. If NO: fall back to full Pass 1 API generation (for custom/alert articles)
+    4. Always run Pass 2 (audit) — 1 API call for quality assurance
+    5. If audit finds critical issues AND article was API-generated: run Pass 3 fix
+    6. If audit finds critical issues AND article was pre-generated: flag for manual review
+    7. Run Pass 4 (social media) 
+    8. Send email notification
+    """
     import time
 
     print(f"\n{'='*60}")
@@ -1391,17 +1404,38 @@ def _run_pipeline(post: dict, calendar: dict):
     print(f"Slug: {post['slug']}")
     print(f"{'='*60}\n")
 
-    # Pass 1: Generate
-    html = pass1_generate(post, calendar)
+    # Check for pre-generated article first
+    pre_gen_path = PRE_GENERATED_DIR / f"{post['slug']}.html"
+    is_pre_generated = pre_gen_path.exists()
+
+    if is_pre_generated:
+        print(f"  📄 Found pre-generated article: {pre_gen_path}")
+        html = pre_gen_path.read_text(encoding="utf-8")
+        print(f"  ✓ Loaded pre-generated HTML ({len(html):,} chars)")
+        print(f"  💰 Pass 1 SKIPPED — saving API credits")
+    else:
+        print(f"  ⚡ No pre-generated file found — generating via API...")
+        # Pass 1: Generate (full API call with web search)
+        html = pass1_generate(post, calendar)
+        print(f"  ✓ API-generated HTML ({len(html):,} chars)")
+
+        # Wait for rate limit
+        print("  ⏳ Waiting 90s for rate limit reset...")
+        time.sleep(90)
+
+    # Save initial draft
     draft_path = DRAFTS_DIR / f"{post['slug']}.html"
     draft_path.write_text(html, encoding="utf-8")
     print(f"  ✓ Draft saved: {draft_path}")
 
-    # Wait 65s to reset rate limit window (30k tokens/min)
-    print("  ⏳ Waiting 90s for rate limit reset...")
-    time.sleep(90)
+    # Pass 2: Audit (always runs — 1 API call for quality assurance)
+    if not is_pre_generated:
+        # Only need to wait if we just did Pass 1
+        pass
+    else:
+        # Pre-generated articles go straight to audit, no wait needed
+        pass
 
-    # Pass 2: Audit
     audit = pass2_audit(html, post)
     audit_path = DRAFTS_DIR / f"{post['slug']}_audit.json"
     audit_path.write_text(json.dumps(audit, indent=2), encoding="utf-8")
@@ -1410,33 +1444,36 @@ def _run_pipeline(post: dict, calendar: dict):
           f"Critical: {len(audit.get('critical_issues', []))} | "
           f"Warnings: {len(audit.get('warnings', []))}")
 
-    # Pass 3: Fix critical issues (if any)
+    # Pass 3: Fix critical issues
     if audit.get("critical_issues"):
-        print(f"  ⚠ {len(audit['critical_issues'])} critical issues found — auto-fixing...")
-        print("  ⏳ Waiting 90s for rate limit reset...")
-        time.sleep(90)
+        if is_pre_generated:
+            # Pre-generated articles: flag issues but DON'T auto-fix
+            # (you wrote it in Claude Chat, so review the audit manually)
+            print(f"  ⚠ {len(audit['critical_issues'])} critical issues found in pre-generated article")
+            print(f"  📋 Issues flagged for your manual review (not auto-fixing pre-generated content)")
+        else:
+            # API-generated articles: auto-fix as before
+            print(f"  ⚠ {len(audit['critical_issues'])} critical issues found — auto-fixing...")
+            print("  ⏳ Waiting 90s for rate limit reset...")
+            time.sleep(90)
 
-        html = pass3_fix(html, audit, post)
-        draft_path.write_text(html, encoding="utf-8")
+            html = pass3_fix(html, audit, post)
+            draft_path.write_text(html, encoding="utf-8")
 
-        # Re-audit the fixed version
-        print("  ⏳ Waiting 90s for rate limit reset...")
-        time.sleep(90)
+            # Re-audit the fixed version
+            print("  ⏳ Waiting 90s for rate limit reset...")
+            time.sleep(90)
 
-        audit2 = pass2_audit(html, post)
-        audit_path.write_text(json.dumps(audit2, indent=2), encoding="utf-8")
-        print(f"  ✓ Post-fix audit: Grade {audit2.get('overall_grade', '?')} | "
-              f"Critical: {len(audit2.get('critical_issues', []))}")
-        audit = audit2
+            audit2 = pass2_audit(html, post)
+            audit_path.write_text(json.dumps(audit2, indent=2), encoding="utf-8")
+            print(f"  ✓ Post-fix audit: Grade {audit2.get('overall_grade', '?')} | "
+                  f"Critical: {len(audit2.get('critical_issues', []))}")
+            audit = audit2
 
-    # Pass 4: Social media derivatives
-    print("  ⏳ Waiting 90s for rate limit reset...")
-    time.sleep(90)
-
-    social = pass4_social(html, post)
-    social_path = DRAFTS_DIR / f"{post['slug']}_social.json"
-    social_path.write_text(json.dumps(social, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"  ✓ Social content saved: {social_path}")
+    # Pass 4: Social media — SKIPPED
+    # Social content can be generated manually in Claude Chat from the published article.
+    # This saves 1 API call per article.
+    print(f"  ⏭ Pass 4 (social) skipped — generate manually in Claude Chat after publishing")
 
     # Generate blog card and sitemap entry
     card_html = generate_blog_card_html(post, calendar)
@@ -1448,18 +1485,25 @@ def _run_pipeline(post: dict, calendar: dict):
     sitemap_path.write_text(sitemap_entry, encoding="utf-8")
 
     # Send email notification
+    source_label = "PRE-GENERATED" if is_pre_generated else "API-GENERATED"
     try:
-        subject, plain, html = format_draft_notification(post, audit, str(draft_path))
-        send_email(subject, plain, html)
+        subject, plain, html_email = format_draft_notification(post, audit, str(draft_path))
+        # Prepend source label to subject
+        subject = f"[{source_label}] {subject}"
+        send_email(subject, plain, html_email)
         print(f"  ✓ Email notification sent to {NOTIFY_EMAIL}")
     except Exception as e:
         print(f"  ✗ Email error: {e}")
         subject, plain, _ = format_draft_notification(post, audit, str(draft_path))
-        print(f"  Subject: {subject}")
+        print(f"  Subject: [{source_label}] {subject}")
         print(f"  {plain[:300]}")
 
     print(f"\n{'='*60}")
-    print(f"PIPELINE COMPLETE — awaiting your approval")
+    if is_pre_generated:
+        print(f"PIPELINE COMPLETE (pre-generated) — 1 API call used (audit only)")
+    else:
+        print(f"PIPELINE COMPLETE (API-generated) — Pass 1 + audit")
+    print(f"Awaiting your approval")
     print(f"{'='*60}\n")
 
 
