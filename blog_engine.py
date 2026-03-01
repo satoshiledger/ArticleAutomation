@@ -768,13 +768,28 @@ def update_blog_index(post: dict, calendar: dict) -> bool:
     title_en = post["title_en"].replace('"', '\\"')
     title_es = post["title_es"].replace('"', '\\"')
 
+    # Calculate read time from the actual article HTML
+    draft_path = DRAFTS_DIR / f"{post['slug']}.html"
+    approved_path = APPROVED_DIR / f"{post['slug']}.html"
+    pre_gen_path = PRE_GENERATED_DIR / f"{post['slug']}.html"
+    article_html = ""
+    for p in [approved_path, draft_path, pre_gen_path]:
+        if p.exists():
+            article_html = p.read_text(encoding="utf-8")
+            break
+    # Strip HTML tags to get plain text, count words, divide by 200 wpm
+    plain_text = re.sub(r'<[^>]+>', ' ', article_html)
+    plain_text = re.sub(r'\s+', ' ', plain_text).strip()
+    word_count = len(plain_text.split())
+    read_time = max(1, round(word_count / 200))
+
     new_entry = f"""        {{
             category: "{category}",
             color: "{color}",
             tagEN: "{tag_en}", tagES: "{tag_es}",
             titleEN: "{title_en}",
             titleES: "{title_es}",
-            date: "{date_en}", dateES: "{date_es}", readTime: 12,
+            date: "{date_en}", dateES: "{date_es}", readTime: {read_time},
             descEN: "Read the full article for expert analysis on this topic with real-world examples and official source citations.",
             descES: "Lea el art\\u00edculo completo para an\\u00e1lisis experto con ejemplos reales y citas de fuentes oficiales.",
             url: "{post['slug']}.html"
