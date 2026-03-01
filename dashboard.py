@@ -132,11 +132,19 @@ DASHBOARD_TEMPLATE = """
                         <a href="/social/{{ draft.slug }}" class="bg-slate-700 text-white px-4 py-2 rounded-lg font-bold hover:bg-slate-600 transition text-sm">Social</a>
                     </div>
                 </div>
+                {% if draft.audit.get('critical_issues') %}
+                <div class="mt-4 pt-4 border-t border-red-900">
+                    <p class="text-sm text-red-400 font-bold mb-2">Critical Issues:</p>
+                    {% for c in draft.audit.get('critical_issues', [])[:5] %}
+                    <p class="text-sm text-red-300 ml-4">🔴 {{ c.get('issue', '') or c.get('recommendation', '') or c }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
                 {% if draft.audit.get('warnings') %}
                 <div class="mt-4 pt-4 border-t border-slate-800">
                     <p class="text-sm text-yellow-500 font-bold mb-2">Warnings:</p>
                     {% for w in draft.audit.get('warnings', [])[:3] %}
-                    <p class="text-sm text-slate-400 ml-4">⚠️ {{ w.get('issue', '') or w.get('recommendation', '') }}</p>
+                    <p class="text-sm text-slate-400 ml-4">⚠️ {{ w.get('issue', '') or w.get('recommendation', '') or w }}</p>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -259,8 +267,14 @@ REVIEW_TEMPLATE = """
         <span class="text-red-400">🔴 {{ audit.get('critical_issues', [])|length }} critical</span>
         <span class="text-yellow-400">🟡 {{ audit.get('warnings', [])|length }} warnings</span>
         <span class="text-green-400">🟢 {{ audit.get('suggestions', [])|length }} suggestions</span>
+        {% for c in audit.get('critical_issues', [])[:5] %}
+            <span class="text-red-400 border-l border-slate-700 pl-4">🔴 {{ c.get('issue', '') or c.get('recommendation', '') or c }}</span>
+        {% endfor %}
         {% for w in audit.get('warnings', [])[:3] %}
-            <span class="text-yellow-500 border-l border-slate-700 pl-4">{{ w.get('issue', '') or w.get('recommendation', '') }}</span>
+            <span class="text-yellow-500 border-l border-slate-700 pl-4">🟡 {{ w.get('issue', '') or w.get('recommendation', '') or w }}</span>
+        {% endfor %}
+        {% for s in audit.get('suggestions', [])[:3] %}
+            <span class="text-green-400 border-l border-slate-700 pl-4">🟢 {{ s.get('issue', '') or s.get('recommendation', '') or s }}</span>
         {% endfor %}
     </div>
     <div class="px-4 py-4 split-view">
