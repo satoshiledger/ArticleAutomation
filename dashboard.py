@@ -50,17 +50,17 @@ def start_scheduler():
             misfire_grace_time=3600,
         )
 
-        # News monitor: Daily at 10:00 UTC (6:00 AM EST)
+        # News monitor: Weekly on Sundays at 10:00 UTC (6:00 AM EST)
         scheduler.add_job(
             run_news_monitor_pipeline,
-            CronTrigger(hour=10, minute=0),
+            CronTrigger(day_of_week="sun", hour=10, minute=0),
             id="news_monitor",
-            name="News Monitor",
+            name="News Monitor (Weekly)",
             misfire_grace_time=3600,
         )
 
         scheduler.start()
-        print("Scheduler started: Blog (Mon/Wed/Fri 12:00 UTC) + News (Daily 10:00 UTC)")
+        print("Scheduler started: Blog (Mon/Wed/Fri 12:00 UTC) + News (Sunday 10:00 UTC)")
 
     except ImportError:
         print("APScheduler not installed. Cron jobs disabled. Use /trigger/blog and /trigger/news instead.")
