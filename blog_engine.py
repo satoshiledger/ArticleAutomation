@@ -1018,20 +1018,47 @@ Conduct your full audit and respond ONLY with the JSON audit report.
     print("  [Pass 2] Running adversarial fact-check audit...")
     raw = call_claude(PASS2_AUDIT_PROMPT, user_message, use_web_search=True)
 
-    # Parse JSON from response
-    raw = re.sub(r"^```json?\s*", "", raw, flags=re.MULTILINE)
-    raw = re.sub(r"```\s*$", "", raw, flags=re.MULTILINE)
+    # Robust JSON extraction — handle markdown fences, preamble text, etc.
+    audit = None
 
-    try:
-        audit = json.loads(raw.strip())
-    except json.JSONDecodeError:
+    # Strategy 1: Try to find JSON block between ```json ... ```
+    json_block_match = re.search(r'```json?\s*\n?(.*?)\n?\s*```', raw, re.DOTALL)
+    if json_block_match:
+        try:
+            audit = json.loads(json_block_match.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+
+    # Strategy 2: Try to find first { ... } block (greedy, outermost braces)
+    if audit is None:
+        brace_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if brace_match:
+            try:
+                audit = json.loads(brace_match.group(0))
+            except json.JSONDecodeError:
+                pass
+
+    # Strategy 3: Strip common prefixes and try raw parse
+    if audit is None:
+        cleaned = raw.strip()
+        cleaned = re.sub(r"^```json?\s*", "", cleaned, flags=re.MULTILINE)
+        cleaned = re.sub(r"```\s*$", "", cleaned, flags=re.MULTILINE)
+        cleaned = cleaned.strip()
+        try:
+            audit = json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+
+    # Fallback: return the raw response so user can see what the API actually said
+    if audit is None:
+        print(f"  ⚠ Could not parse audit JSON. Raw response preview: {raw[:500]}")
         audit = {
             "overall_grade": "UNKNOWN",
             "publish_ready": False,
-            "critical_issues": [{"severity": "CRITICAL", "issue": "Audit response was not valid JSON — manual review required"}],
-            "warnings": [],
+            "critical_issues": [],
+            "warnings": [{"issue": "Audit response could not be parsed as JSON — see raw_response below for details"}],
             "suggestions": [],
-            "raw_response": raw[:2000],
+            "raw_response": raw[:3000],
         }
 
     return audit
